@@ -1,0 +1,80 @@
+/* ==================================================
+   DESIGN TOKENS - LUMI APP (MODO CLARO E ESCURO)
+   Identidade visual extraída de /identidade-visual e mockup de login
+   ================================================== */
+
+:root, [data-theme="light"] {
+  /* Cores de Texto Semânticas - Modo Claro */
+  --color-text-primary: #334431;
+  --color-text-secondary: #5A6D58;
+  --color-text-muted: #7E927C;
+
+  /* Paleta Base da Marca */
+  --lumi-green-primary: #7D9371;      /* Verde sálvia/musgo */
+  --lumi-green-light: #B5CE6B;        /* Verde pistache/lima suave */
+  --lumi-pink-accent: #D88E99;        /* Rosa pastel suave */
+
+  /* Cores de Fundo e Superfície - Modo Claro */
+  --login-bg: #F3F5EF;
+  --login-input-bg: #F7F9F4;
+  --login-input-border: #BDD490;
+  --login-input-text: #5A6D58;
+  --login-input-placeholder: #B2C3B0;
+  
+  /* Cores de Elementos e Ícones - Modo Claro */
+  --login-accent-pink: #D88E99;
+  --login-icon-pink: #DE939D;
+  --login-icon-green: #90A868;
+  --login-text-greeting: #778B75;
+  --login-btn-border: #E5A4AE;
+  --login-btn-text: #6A8263;
+  --login-btn-arrow-bg: #DE939D;
+  --login-footer-text: #73886E;
+
+  /* Tipografia */
+  --lumi-font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --lumi-radius-pill: 9999px;
+  --lumi-radius-md: 14px;
+
+  /* Efeitos de Vidro e Elevação - Modo Claro */
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(189, 212, 144, 0.4);
+  --glass-dock-bg: rgba(255, 255, 255, 0.82);
+  --glass-dock-border: rgba(216, 142, 153, 0.3);
+  --glass-card-bg: rgba(255, 255, 255, 0.65);
+  --glass-shadow: 0 10px 30px rgba(90, 109, 88, 0.12);
+  --ios-spring: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+[data-theme="dark"] {
+  /* Cores de Texto Semânticas - Modo Escuro (Totalmente Visível) */
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #EDEFEA;
+  --color-text-muted: #D1D8CE;
+
+  /* Cores de Fundo e Superfície - Modo Escuro */
+  --login-bg: #231721;
+  --login-input-bg: #2B1D28;
+  --login-input-border: #E8AAB3;
+  --login-input-text: #FFFFFF;
+  --login-input-placeholder: #B0BEAE;
+  
+  /* Cores de Elementos e Ícones - Modo Escuro */
+  --login-accent-pink: #E8AAB3;
+  --login-icon-pink: #E8AAB3;
+  --login-icon-green: #B5CE6B;
+  --login-text-greeting: #EDEFEA;
+  --login-btn-border: #E8AAB3;
+  --login-btn-text: #FFFFFF;
+  --login-btn-arrow-bg: #F0A5AF;
+  --login-footer-text: #EDEFEA;
+
+  /* Efeitos de Vidro e Elevação - Modo Escuro iOS */
+  --glass-bg: rgba(35, 23, 33, 0.72);
+  --glass-border: rgba(232, 170, 179, 0.18);
+  --glass-dock-bg: rgba(35, 23, 33, 0.82);
+  --glass-dock-border: rgba(232, 170, 179, 0.22);
+  --glass-card-bg: rgba(43, 29, 40, 0.75);
+  --glass-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
+  --ios-spring: cubic-bezier(0.25, 1, 0.5, 1);
+}

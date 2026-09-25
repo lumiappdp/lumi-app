@@ -1,0 +1,269 @@
+/* ==================================================
+   ESTILIZAÇÃO DA PÁGINA DE PERFIL - LUMI APP (ESTILO iOS MODERNO)
+   Layout Inset Grouped, Glassmorphism e Transições Suaves
+   ================================================== */
+
+.profile-container {
+  min-height: 100vh;
+  background-color: var(--login-bg);
+  color: var(--lumi-text-primary, #FFFFFF);
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 110px;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+  box-sizing: border-box;
+  transition: background-color 0.35s var(--ios-spring), color 0.35s ease;
+}
+
+/* ==================================================
+   HEADER DO TOPO
+   ================================================== */
+.profile-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.8rem 1rem 0.8rem;
+}
+
+.profile-page-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: inherit;
+}
+
+/* ==================================================
+   CARD DO USUÁRIO E AVATAR
+   ================================================== */
+.profile-user-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1rem 1.5rem 1.8rem;
+}
+
+.profile-avatar-wrapper {
+  position: relative;
+  margin-bottom: 1.2rem;
+}
+
+.profile-avatar-circle {
+  width: 106px;
+  height: 106px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #58448A 0%, #3B2D5C 100%);
+  border: 3px solid rgba(234, 161, 172, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 28px rgba(88, 68, 138, 0.45);
+  overflow: hidden;
+  position: relative;
+}
+
+.profile-user-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  user-select: none;
+}
+
+/* Badge de edição no avatar em Rosa Pastel oficial da marca */
+.avatar-edit-badge {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #EAA1AC;
+  border: 2.5px solid var(--login-bg);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: transform 0.25s var(--ios-spring), background-color 0.2s ease;
+}
+
+.avatar-edit-badge:hover {
+  transform: scale(1.12);
+}
+
+.avatar-edit-badge:active {
+  transform: scale(0.92);
+}
+
+.user-name {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: inherit;
+  max-width: 320px;
+  line-height: 1.35;
+  margin-bottom: 0.45rem;
+}
+
+.user-subscription {
+  font-size: 0.92rem;
+  color: #8E8E93;
+  font-weight: 400;
+}
+
+/* ==================================================
+   LISTA DE OPÇÕES (ESTILO iOS INSET GROUPED)
+   ================================================== */
+.profile-menu-list {
+  display: flex;
+  flex-direction: column;
+  padding: 0 1.25rem;
+  gap: 0.75rem;
+}
+
+/* Agrupamento em cartões com visual de vidro fosco */
+.profile-menu-list {
+  background: var(--glass-card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 22px;
+  padding: 0.4rem 1.1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.light .profile-menu-list {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(189, 212, 144, 0.45);
+  box-shadow: 0 8px 24px rgba(90, 109, 88, 0.1);
+}
+
+.menu-item-row {
+  width: 100%;
+  background: transparent;
+  border: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  color: inherit;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  transition: opacity 0.2s ease, transform 0.2s var(--ios-spring);
+  text-align: left;
+}
+
+.light .menu-item-row {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.menu-item-row:last-child {
+  border-bottom: none;
+}
+
+.menu-item-row:active {
+  opacity: 0.65;
+  transform: scale(0.985);
+}
+
+.menu-item-left {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+
+/* Ícones das opções em círculos sutis translúcidos */
+.menu-item-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: rgba(234, 161, 172, 0.12);
+  color: #EAA1AC;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.menu-item-label {
+  font-size: 1.02rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: inherit;
+}
+
+.menu-item-chevron {
+  font-size: 1.4rem;
+  color: #8E8E93;
+  font-weight: 300;
+}
+
+/* Ação destrutiva / Apagar Conta */
+.danger-item .menu-item-icon {
+  background: rgba(255, 92, 92, 0.14);
+  color: #FF5C5C;
+}
+
+.danger-item .menu-item-label {
+  color: #FF5C5C;
+}
+
+/* ==================================================
+   SWITCH DE TEMA ESCURO (ESTILO iOS)
+   ================================================== */
+.theme-toggle-label {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 29px;
+  cursor: pointer;
+}
+
+.theme-toggle-label input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(120, 120, 128, 0.32);
+  border-radius: 9999px;
+  transition: 0.3s var(--ios-spring);
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 23px;
+  width: 23px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #FFFFFF;
+  border-radius: 50%;
+  transition: 0.3s var(--ios-spring);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+}
+
+input:checked + .toggle-slider {
+  background-color: #EAA1AC;
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(21px);
+}
+
+/* Modo Escuro específico */
+.profile-container.dark {
+  background-color: #231721;
+  color: #FFFFFF;
+}
+
+.profile-container.light {
+  background-color: #F3F5EF;
+  color: #243023;
+}

@@ -1,0 +1,19 @@
+{
+  "name": "Lumi App — Stickers para Stories",
+  "short_name": "Lumi App",
+  "description": "Descubra, copie e cole figurinhas e frases exclusivas nos seus Instagram Stories.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#231721",
+  "theme_color": "#231721",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

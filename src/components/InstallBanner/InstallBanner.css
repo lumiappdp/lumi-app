@@ -1,0 +1,102 @@
+/* ==================================================
+   BANNER DE INSTALAÇÃO PWA - LUMI APP
+   Design refinado com Glassmorphism e tons de destaque
+   ================================================== */
+
+.install-pwa-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  margin: 0.75rem 1rem 0.25rem 1rem;
+  background: rgba(45, 33, 44, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(234, 161, 172, 0.25);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  animation: slideDownBanner 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 40;
+}
+
+@keyframes slideDownBanner {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.install-pwa-left {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.install-pwa-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.install-pwa-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.install-pwa-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.install-pwa-sub {
+  font-size: 0.75rem;
+  color: #B0A0AC;
+  line-height: 1.2;
+}
+
+.install-pwa-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.install-pwa-btn {
+  background: linear-gradient(135deg, #F3B3BC 0%, #EAA1AC 100%);
+  color: #231721;
+  border: none;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.45rem 0.85rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  white-space: nowrap;
+}
+
+.install-pwa-btn:active {
+  transform: scale(0.95);
+}
+
+.install-pwa-close {
+  background: transparent;
+  border: none;
+  color: #8E8E93;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.25rem 0.35rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.install-pwa-close:hover {
+  color: #FFFFFF;
+}

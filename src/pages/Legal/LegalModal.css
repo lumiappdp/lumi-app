@@ -1,0 +1,157 @@
+/* ==================================================
+   ESTILIZAÇÃO DO MODAL INSTITUCIONAL E LEGAL (iOS STYLE)
+   ================================================== */
+
+.legal-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 8, 14, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.2rem;
+  z-index: 1000;
+  animation: fadeInBackdrop 0.25s ease-out;
+}
+
+@keyframes fadeInBackdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.legal-modal-card {
+  width: 100%;
+  max-width: 440px;
+  max-height: 82vh;
+  background: rgba(35, 23, 33, 0.95);
+  border: 1px solid rgba(234, 161, 172, 0.25);
+  border-radius: 26px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(234, 161, 172, 0.15);
+  overflow: hidden;
+  animation: slideUpModal 0.3s var(--ios-spring);
+}
+
+.legal-modal-backdrop.light .legal-modal-card {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(189, 212, 144, 0.6);
+  box-shadow: 0 16px 40px rgba(90, 109, 88, 0.2);
+}
+
+@keyframes slideUpModal {
+  from { transform: translateY(30px) scale(0.96); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* Header do Modal */
+.legal-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.4rem 1.4rem 0.8rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.legal-modal-backdrop.light .legal-modal-header {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+.legal-modal-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.legal-modal-backdrop.light .legal-modal-title {
+  color: #231721;
+}
+
+.legal-modal-subtitle {
+  font-size: 0.8rem;
+  color: #EAA1AC;
+  margin: 0.3rem 0 0 0;
+  opacity: 0.9;
+}
+
+.legal-close-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  color: #8E8E93;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.legal-close-btn:hover {
+  background: rgba(234, 161, 172, 0.25);
+  color: #EAA1AC;
+  transform: scale(1.08);
+}
+
+/* Corpo do Modal */
+.legal-modal-body {
+  padding: 1.2rem 1.4rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  display: flex;
+  flex-direction: column;
+  gap: 1.3rem;
+  line-height: 1.55;
+}
+
+.legal-section-heading {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #EAA1AC;
+  margin: 0 0 0.4rem 0;
+}
+
+.legal-modal-backdrop.light .legal-section-heading {
+  color: #5A7456;
+}
+
+.legal-paragraph {
+  font-size: 0.88rem;
+  color: #D6C6D2;
+  margin: 0 0 0.5rem 0;
+}
+
+.legal-modal-backdrop.light .legal-paragraph {
+  color: #3D483C;
+}
+
+/* Rodapé do Modal */
+.legal-modal-footer {
+  padding: 0.8rem 1.4rem 1.2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.legal-confirm-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #F3B3BC 0%, #EAA1AC 50%, #D4818E 100%);
+  color: #231721;
+  border: none;
+  border-radius: 100px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(234, 161, 172, 0.35);
+  transition: all 0.2s var(--ios-spring);
+}
+
+.legal-confirm-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(234, 161, 172, 0.5);
+}

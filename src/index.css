@@ -1,0 +1,25 @@
+/* Importação das variáveis do Design System */
+@import './styles/variables.css';
+
+/* Reset básico e tipografia global */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--lumi-font-sans);
+  background-color: var(--lumi-bg-app);
+  color: var(--lumi-text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Container centralizado e responsivo para telas móveis, tablets e desktop */
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}

@@ -1,0 +1,246 @@
+/* ==================================================
+   ESTILIZAÇÃO DA TELA DE LOGIN - LUMI APP (ESTILO iOS MODERNO)
+   Translucidez refinada, microinterações elásticas e profundidade
+   ================================================== */
+
+.login-page {
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--login-bg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2.5rem 1.5rem;
+  transition: background-color 0.35s var(--ios-spring), color 0.35s ease;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Wrapper centralizado e responsivo */
+.login-card-wrapper {
+  width: 100%;
+  max-width: 330px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* ==================================================
+   ÁREA DO LOGOTIPO ORIGINAL
+   ================================================== */
+.brand-logo-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1.6rem;
+}
+
+.brand-logo-img {
+  width: 135px;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  filter: drop-shadow(0 6px 16px rgba(234, 161, 172, 0.22));
+  transition: transform 0.3s var(--ios-spring);
+}
+
+.brand-logo-img:hover {
+  transform: scale(1.04);
+}
+
+/* ==================================================
+   MENSAGEM DE BOAS-VINDAS
+   ================================================== */
+.welcome-text {
+  font-size: 0.96rem;
+  font-style: italic;
+  color: var(--login-text-greeting);
+  margin-bottom: 2rem;
+  letter-spacing: 0.01em;
+}
+
+/* ==================================================
+   FORMULÁRIO E INPUTS EM PÍLULA (COM TOQUE TRANSLÚCIDO)
+   ================================================== */
+.login-input-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.input-field-pill {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  background-color: var(--login-input-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1.8px solid var(--login-input-border);
+  border-radius: var(--lumi-radius-pill);
+  padding: 0.78rem 1.4rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  transition: all 0.25s var(--ios-spring);
+  box-sizing: border-box;
+}
+
+.input-field-pill:focus-within {
+  transform: scale(1.02);
+  box-shadow: 0 0 0 4px rgba(234, 161, 172, 0.25), 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.input-field-pill input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 1.05rem;
+  font-style: italic;
+  color: var(--login-input-text);
+  margin-left: 0.8rem;
+  font-family: inherit;
+}
+
+.input-field-pill input::placeholder {
+  color: var(--login-input-placeholder);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.field-icon.icon-pink {
+  display: flex;
+  align-items: center;
+  color: var(--login-icon-pink);
+}
+
+.toggle-password-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--login-icon-green);
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: transform 0.2s var(--ios-spring), opacity 0.2s ease;
+}
+
+.toggle-password-btn:active {
+  transform: scale(0.85);
+}
+
+.toggle-password-btn:hover {
+  opacity: 0.8;
+}
+
+/* Botão ✕ para apagar tudo digitado no campo */
+.clear-input-btn {
+  background: rgba(234, 161, 172, 0.2);
+  color: var(--login-icon-pink);
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 0.4rem;
+  transition: all 0.2s var(--ios-spring);
+}
+
+.clear-input-btn:hover {
+  background: #EAA1AC;
+  color: #231721;
+}
+
+.clear-input-btn:active {
+  transform: scale(0.85);
+}
+
+/* ==================================================
+   BOTÃO "ENTRAR" (MICROINTERAÇÃO TÁTIL)
+   ================================================== */
+.action-button-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.6rem;
+}
+
+.submit-enter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  background: var(--glass-card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.8px solid var(--login-btn-border);
+  border-radius: var(--lumi-radius-pill);
+  padding: 0.45rem 0.55rem 0.45rem 1.65rem;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transition: transform 0.25s var(--ios-spring), box-shadow 0.25s ease;
+}
+
+.submit-enter-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(234, 161, 172, 0.35);
+}
+
+.submit-enter-btn:active {
+  transform: scale(0.95);
+}
+
+.submit-btn-label {
+  color: var(--login-btn-text);
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.arrow-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--login-btn-arrow-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ==================================================
+   RODAPÉ (ESQUECEU SENHA E CADASTRE-SE)
+   ================================================== */
+.login-links-footer {
+  margin-top: 3.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.text-link {
+  color: var(--login-footer-text);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-style: italic;
+  transition: opacity 0.2s ease, transform 0.2s var(--ios-spring);
+}
+
+.text-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.text-link:active {
+  transform: scale(0.96);
+}
+
+.text-link.font-medium {
+  font-weight: 500;
+}

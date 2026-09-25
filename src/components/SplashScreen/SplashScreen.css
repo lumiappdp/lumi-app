@@ -1,0 +1,85 @@
+/* ==================================================
+   ESTILIZAÇÃO DA SPLASH SCREEN ANIMADA - LUMI APP
+   Animação orgânica na logo original oficial
+   ================================================== */
+
+.splash-screen-container {
+  position: fixed;
+  inset: 0;
+  background-color: #F9FBF8;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  transition: opacity 0.65s cubic-bezier(0.4, 0, 0.2, 1), transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.splash-screen-container.fade-out {
+  opacity: 0;
+  transform: scale(1.05);
+  pointer-events: none;
+}
+
+/* Wrapper da logo original com efeitos visuais */
+.splash-logo-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Aura / Glow sutil no fundo da logo */
+.splash-glow-aura {
+  position: absolute;
+  width: 170px;
+  height: 170px;
+  background: radial-gradient(circle, rgba(181, 206, 107, 0.35) 0%, rgba(216, 142, 153, 0.15) 50%, transparent 75%);
+  border-radius: 50%;
+  filter: blur(14px);
+  animation: pulseAura 2.2s ease-in-out infinite alternate;
+}
+
+@keyframes pulseAura {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0.9;
+  }
+}
+
+/* Animação orgânica na logo original da Lumi */
+.splash-original-logo {
+  position: relative;
+  width: 145px;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  animation: revealLumiLogo 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Efeito de revelação que cresce, foca e flutua com naturalidade */
+@keyframes revealLumiLogo {
+  0% {
+    opacity: 0;
+    transform: scale(0.7) translateY(12px);
+    filter: blur(10px);
+    clip-path: circle(0% at 50% 60%);
+  }
+  45% {
+    opacity: 1;
+    filter: blur(0px);
+    clip-path: circle(100% at 50% 50%);
+  }
+  70% {
+    transform: scale(1.05) translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    clip-path: circle(100% at 50% 50%);
+  }
+}

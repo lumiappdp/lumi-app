@@ -1,0 +1,511 @@
+/* ==================================================
+   ESTILIZAÇÃO DA PÁGINA DE DETALHES DE CATEGORIA
+   Design Pixel-Perfect com estética iOS, Glassmorphism e Cards Tipográficos
+   ================================================== */
+
+.category-detail-container {
+  min-height: 100vh;
+  background-color: var(--login-bg);
+  color: var(--lumi-text-primary, #FFFFFF);
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 90px;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+  box-sizing: border-box;
+  transition: background-color 0.35s var(--ios-spring), color 0.35s ease;
+}
+
+/* ==================================================
+   HEADER DA CATEGORIA (iOS STYLE)
+   ================================================== */
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.2rem 1.1rem 0.9rem;
+  position: sticky;
+  top: 0;
+  background: var(--login-bg);
+  z-index: 50;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.header-icon-btn {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  border-radius: 50%;
+  transition: opacity 0.2s ease, transform 0.2s var(--ios-spring);
+}
+
+.header-icon-btn:active {
+  transform: scale(0.88);
+  opacity: 0.7;
+}
+
+.category-page-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: inherit;
+}
+
+/* ==================================================
+   BARRA DE BUSCA EXPANSÍVEL (ESTILO iOS)
+   ================================================== */
+.header-search-bar-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  animation: searchExpand 0.25s var(--ios-spring);
+}
+
+.search-input-pill {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(234, 161, 172, 0.2);
+  border-radius: 9999px;
+  padding: 0.45rem 0.9rem;
+  gap: 0.5rem;
+  color: #FFFFFF;
+}
+
+.light .search-input-pill {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(189, 212, 144, 0.5);
+  color: #243023;
+}
+
+.search-input-pill input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: inherit;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.search-input-pill input::placeholder {
+  color: #8E8E93;
+}
+
+.clear-search-btn {
+  background: rgba(142, 142, 147, 0.4);
+  border: none;
+  color: #FFFFFF;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.cancel-search-btn {
+  background: transparent;
+  border: none;
+  color: #EAA1AC;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.2rem 0;
+  white-space: nowrap;
+}
+
+.no-stickers-found {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: #8E8E93;
+  font-size: 0.95rem;
+}
+
+@keyframes searchExpand {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ==================================================
+   BANNER TOAST DE STATUS DE CÓPIA (DISCRETO / iOS STYLE)
+   ================================================== */
+.copy-toast-banner {
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(35, 23, 33, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(234, 161, 172, 0.4);
+  color: #FFFFFF;
+  padding: 0.55rem 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  animation: toastFadeIn 0.3s var(--ios-spring);
+  pointer-events: none;
+}
+
+.copy-toast-banner.error {
+  border-color: rgba(255, 92, 92, 0.5);
+  color: #FF8080;
+}
+
+@keyframes toastFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+/* ==================================================
+   GRADE DE CARDS EM 2 COLUNAS
+   ================================================== */
+.category-stickers-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.9rem;
+  padding: 0.5rem 1.1rem;
+}
+
+.sticker-card {
+  height: 200px;
+  background-color: #120A11;
+  border-radius: 20px;
+  border: 1px solid rgba(232, 170, 179, 0.12);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.85rem;
+  box-sizing: border-box;
+  position: relative;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  transition: transform 0.25s var(--ios-spring), border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.light .sticker-card {
+  background-color: #FFFFFF;
+  border: 1px solid rgba(189, 212, 144, 0.5);
+  box-shadow: 0 4px 14px rgba(90, 109, 88, 0.08);
+}
+
+.sticker-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  border-color: rgba(234, 161, 172, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 16px rgba(234, 161, 172, 0.15);
+}
+
+.sticker-card:active {
+  transform: scale(0.96);
+}
+
+/* ==================================================
+   AÇÕES DO TOPO DO CARD (PALETA E CADEADO)
+   ================================================== */
+.card-top-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+/* Círculo Multicolorido de Paleta de Cores */
+.color-wheel-badge {
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: conic-gradient(
+    #FF453A, #FF9F0A, #FFD60A, #30D158, #66D4CF, #40C8E0, #0A84FF, #5E5CE6, #BF5AF2, #FF375F, #FF453A
+  );
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.empty-badge-spacer {
+  width: 17px;
+  height: 17px;
+}
+
+.premium-lock-badge {
+  color: #8E8E93;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Botão de Favoritar no Topo do Card */
+.favorite-toggle-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem;
+  border-radius: 50%;
+  transition: transform 0.2s var(--ios-spring);
+}
+
+.favorite-toggle-btn:active {
+  transform: scale(0.8);
+}
+
+.favorite-toggle-btn.favorited svg {
+  animation: heartPop 0.3s var(--ios-spring);
+}
+
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+/* ==================================================
+   CONTEÚDO TIPOGRÁFICO CENTRAL
+   ================================================== */
+.sticker-content-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.4rem 0.2rem;
+}
+
+.typography-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.25;
+}
+
+/* Variações Tipográficas conforme a imagem de referência */
+.drink-style .typo-prefix {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: #FFFFFF;
+}
+
+.drink-style .typo-main {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.drink-style .typo-suffix {
+  font-size: 0.75rem;
+  color: #EAA1AC;
+  margin-top: 0.2rem;
+}
+
+.investimento-style .typo-prefix {
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  color: #C0C0C0;
+}
+
+.investimento-style .typo-main {
+  font-family: 'Cinzel', 'Playfair Display', serif;
+  font-size: 1.18rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #FFFFFF;
+}
+
+.investimento-style .typo-suffix {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 0.75rem;
+  color: #C0C0C0;
+  margin-top: 0.2rem;
+}
+
+.felicidade-style .typo-prefix {
+  font-size: 0.75rem;
+  color: #D1D1D6;
+}
+
+.felicidade-style .typo-main {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #FFFFFF;
+}
+
+.felicidade-style .typo-suffix {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #EAA1AC;
+  margin-top: 0.2rem;
+}
+
+/* Garrafa de água com texto curvado */
+.bottle-art-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transform: rotate(-12deg);
+}
+
+.bottle-label-curved {
+  font-family: 'Caveat', cursive, sans-serif;
+  font-size: 1.05rem;
+  color: #FFFFFF;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.feijao-style .typo-prefix {
+  font-family: 'Caveat', cursive, sans-serif;
+  font-size: 0.85rem;
+  color: #FFFFFF;
+}
+
+.feijao-style .typo-main {
+  font-family: 'Caveat', cursive, sans-serif;
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.feijao-style .typo-suffix {
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  color: #8E8E93;
+  margin-top: 0.2rem;
+}
+
+.jantar-style .typo-prefix {
+  font-size: 0.8rem;
+  color: #E5ECE2;
+}
+
+.jantar-style .typo-main {
+  font-family: 'Playfair Display', cursive, serif;
+  font-style: italic;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.jantar-style .typo-suffix {
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  color: #C0C0C0;
+  margin-top: 0.15rem;
+}
+
+.lunch-style .typo-main {
+  font-family: 'Playfair Display', cursive, serif;
+  font-style: italic;
+  font-size: 1.55rem;
+  color: #FFFFFF;
+}
+
+.lunch-style .typo-suffix {
+  font-size: 0.7rem;
+  color: #8E8E93;
+}
+
+.catchup-style .typo-prefix {
+  font-size: 0.75rem;
+  color: #FFFFFF;
+}
+
+.catchup-style .typo-main {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.catchup-style .typo-suffix {
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  color: #8E8E93;
+  margin-top: 0.15rem;
+}
+
+/* ==================================================
+   BOTÃO FLUTUANTE RODA DE CORES (COLOR WHEEL FAB)
+   ================================================== */
+.floating-color-wheel-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  transition: transform 0.25s var(--ios-spring), box-shadow 0.25s ease;
+}
+
+.color-wheel-outer-disk {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: conic-gradient(
+    #FF3B30 0deg,
+    #FF9500 36deg,
+    #FFCC00 72deg,
+    #34C759 108deg,
+    #00C7BE 144deg,
+    #30B0C7 180deg,
+    #007AFF 216deg,
+    #5856D6 252deg,
+    #AF52DE 288deg,
+    #FF2D55 324deg,
+    #FF3B30 360deg
+  );
+  box-shadow: 0 0 0 2.5px rgba(255, 255, 255, 0.4), inset 0 2px 5px rgba(255, 255, 255, 0.35);
+  transition: transform 0.4s var(--ios-spring);
+}
+
+.floating-color-wheel-fab:hover .color-wheel-outer-disk {
+  transform: rotate(60deg) scale(1.08);
+}
+
+.floating-color-wheel-fab:active {
+  transform: scale(0.92);
+}

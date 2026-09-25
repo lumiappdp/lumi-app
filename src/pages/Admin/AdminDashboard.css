@@ -1,0 +1,362 @@
+/* ==================================================
+   ESTILIZAÇÃO DO PAINEL ADMIN - LUMI APP
+   Design iOS com Glassmorphism e Dark Mode Nativo
+   ================================================== */
+
+.admin-dashboard-page {
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--login-bg);
+  color: var(--color-text-primary);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1rem 3rem 1rem;
+  box-sizing: border-box;
+}
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  max-width: 600px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.admin-back-btn {
+  background: var(--glass-card-bg);
+  border: 1.5px solid var(--login-btn-border);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: transform 0.2s var(--ios-spring);
+}
+
+.admin-back-btn:active {
+  transform: scale(0.9);
+}
+
+.admin-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.admin-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.admin-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: #EAA1AC;
+  color: #231721;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--lumi-radius-pill);
+}
+
+.admin-tabs-nav {
+  display: flex;
+  gap: 0.6rem;
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto 1.5rem auto;
+}
+
+.admin-tab-btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border-radius: var(--lumi-radius-pill);
+  background: var(--glass-card-bg);
+  border: 1.5px solid var(--login-input-border);
+  color: var(--color-text-secondary);
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s var(--ios-spring);
+}
+
+.admin-tab-btn.active {
+  background: #EAA1AC;
+  color: #231721;
+  border-color: #EAA1AC;
+}
+
+.admin-content-section {
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.admin-form-card, .admin-gallery-card {
+  background: var(--glass-card-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1.5px solid var(--login-input-border);
+  border-radius: var(--lumi-radius-md);
+  padding: 1.4rem;
+}
+
+.admin-section-heading {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1.2rem;
+}
+
+.admin-dropzone {
+  border: 2px dashed #EAA1AC;
+  border-radius: var(--lumi-radius-md);
+  padding: 1.8rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  background: rgba(234, 161, 172, 0.08);
+  margin-bottom: 1.2rem;
+  transition: all 0.2s ease;
+}
+
+.admin-dropzone:hover {
+  background: rgba(234, 161, 172, 0.15);
+}
+
+.dropzone-icon {
+  color: #EAA1AC;
+  margin-bottom: 0.5rem;
+}
+
+.dropzone-text {
+  font-size: 0.88rem;
+  color: var(--color-text-secondary);
+}
+
+.admin-previews-grid {
+  display: flex;
+  gap: 0.8rem;
+  overflow-x: auto;
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.5rem;
+}
+
+.admin-preview-item {
+  width: 70px;
+  height: 70px;
+  border-radius: var(--lumi-radius-md);
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem;
+  flex-shrink: 0;
+}
+
+.admin-preview-item img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.admin-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.admin-field-group label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.admin-input-pill {
+  width: 100%;
+  background: var(--login-input-bg);
+  border: 1.5px solid var(--login-input-border);
+  border-radius: var(--lumi-radius-pill);
+  padding: 0.75rem 1.2rem;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: 0.95rem;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.admin-submit-btn {
+  width: 100%;
+  background: #EAA1AC;
+  color: #231721;
+  font-weight: 700;
+  font-size: 1.05rem;
+  padding: 0.9rem 1.5rem;
+  border-radius: var(--lumi-radius-pill);
+  border: none;
+  cursor: pointer;
+  margin-top: 0.6rem;
+  transition: transform 0.2s var(--ios-spring), opacity 0.2s ease;
+}
+
+.admin-submit-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.admin-feedback-alert {
+  padding: 0.8rem 1rem;
+  border-radius: var(--lumi-radius-md);
+  margin-bottom: 1.2rem;
+  font-size: 0.88rem;
+}
+
+.admin-feedback-alert.success {
+  background: rgba(181, 206, 107, 0.25);
+  color: #B5CE6B;
+  border: 1px solid #B5CE6B;
+}
+
+.admin-feedback-alert.error {
+  background: rgba(234, 161, 172, 0.25);
+  color: #FFD2D8;
+  border: 1px solid #EAA1AC;
+}
+
+.admin-gallery-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 1.2rem;
+}
+
+.admin-bulk-actions-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.admin-select-all-btn {
+  background: transparent;
+  border: 1px solid var(--login-input-border);
+  color: var(--color-text-secondary);
+  border-radius: var(--lumi-radius-pill);
+  padding: 0.35rem 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-select-all-btn:hover {
+  border-color: #EAA1AC;
+  color: #FFFFFF;
+}
+
+.admin-bulk-delete-btn {
+  background: #EAA1AC;
+  color: #231721;
+  border: none;
+  border-radius: var(--lumi-radius-pill);
+  padding: 0.35rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(234, 161, 172, 0.3);
+  transition: transform 0.2s var(--ios-spring);
+}
+
+.admin-bulk-delete-btn:active {
+  transform: scale(0.92);
+}
+
+.admin-stickers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.8rem;
+}
+
+.admin-sticker-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid var(--login-input-border);
+  border-radius: var(--lumi-radius-md);
+  padding: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s var(--ios-spring);
+}
+
+.admin-sticker-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(234, 161, 172, 0.6);
+}
+
+.admin-sticker-card.selected {
+  border-color: #EAA1AC;
+  background: rgba(234, 161, 172, 0.15);
+  box-shadow: 0 0 0 2px rgba(234, 161, 172, 0.4);
+}
+
+.admin-card-checkbox {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--login-input-border);
+  background: rgba(35, 23, 33, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: #231721;
+  font-weight: 800;
+  transition: all 0.2s ease;
+}
+
+.admin-card-checkbox.checked {
+  background: #EAA1AC;
+  border-color: #EAA1AC;
+}
+
+.admin-sticker-card img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  margin-bottom: 0.4rem;
+}
+
+.admin-sticker-name {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90px;
+}
+
+.admin-delete-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  z-index: 5;
+}

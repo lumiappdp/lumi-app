@@ -1,0 +1,486 @@
+/* ==================================================
+   ESTILIZAÇÃO DA PÁGINA DE CRIAÇÃO DE FIGURINHAS - LUMI APP
+   Design Pixel-Perfect com base nas referências de Stories/iOS
+   Canvas transparente quadriculado e painel tipográfico horizontal
+   ================================================== */
+
+.create-sticker-container {
+  min-height: 100vh;
+  background-color: var(--login-bg);
+  color: var(--lumi-text-primary, #FFFFFF);
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  margin: 0 auto;
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* ==================================================
+   HEADER DA CRIAÇÃO (iOS STYLE)
+   ================================================== */
+.create-header {
+  display: flex;
+  align-items: center;
+  padding: 1.2rem 1.1rem 0.9rem;
+  background: var(--login-bg);
+  position: relative;
+  min-height: 52px;
+}
+
+.create-back-btn {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem;
+  border-radius: 50%;
+  transition: opacity 0.2s ease, transform 0.2s var(--ios-spring);
+  position: absolute;
+  left: 1.1rem;
+}
+
+.create-back-btn:active {
+  transform: scale(0.85);
+}
+
+.create-page-title {
+  width: 100%;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: inherit;
+}
+
+/* Botão "Concluído" no Header de Edição */
+.editing-header-actions {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.done-editing-pill-btn {
+  background: #000000;
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  padding: 0.55rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s var(--ios-spring);
+}
+
+.done-editing-pill-btn:active {
+  transform: scale(0.92);
+}
+
+/* ==================================================
+   ÁREA DO CANVAS QUADRICULADO (TRANSPARÊNCIA)
+   ================================================== */
+.checkerboard-canvas-wrapper {
+  flex: 1;
+  min-height: calc(100vh - 65px);
+  margin: 0 0.8rem 0.8rem;
+  border-radius: 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.2rem;
+  box-sizing: border-box;
+  overflow: hidden;
+
+  /* Padrão Xadrez Cinza Escuro de Transparência idêntico ao print */
+  background-color: #383838;
+  background-image: 
+    linear-gradient(45deg, #4A4A4A 25%, transparent 25%),
+    linear-gradient(-45deg, #4A4A4A 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #4A4A4A 75%),
+    linear-gradient(-45deg, transparent 75%, #4A4A4A 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.4);
+}
+
+/* ==================================================
+   SLIDER VERTICAL LATERAL DE TAMANHO DA FONTE
+   ================================================== */
+.vertical-size-slider-wrapper {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.vertical-size-range-input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 160px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 9999px;
+  outline: none;
+  transform: rotate(-90deg);
+  cursor: pointer;
+}
+
+.vertical-size-range-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+/* ==================================================
+   BOTÕES CIRCULARES DE FERRAMENTAS
+   ================================================== */
+.canvas-top-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.9rem;
+  z-index: 10;
+}
+
+.canvas-bottom-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.9rem;
+  z-index: 10;
+}
+
+.canvas-circle-tool-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: rgba(38, 38, 38, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #FFFFFF;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  transition: transform 0.25s var(--ios-spring), background-color 0.2s ease;
+}
+
+.canvas-circle-tool-btn:hover {
+  background-color: rgba(55, 55, 55, 0.95);
+  transform: scale(1.08);
+}
+
+.canvas-circle-tool-btn:active {
+  transform: scale(0.9);
+}
+
+.tool-btn-text-icon {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ==================================================
+   ÁREA EDITÁVEL DO STICKER NO CENTRO DO CANVAS
+   ================================================== */
+.canvas-interactive-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 2.5rem;
+}
+
+.sticker-live-render-box {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: transparent;
+}
+
+.sticker-live-textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  text-align: center;
+  resize: none;
+  caret-color: #EAA1AC;
+  transition: font-size 0.15s ease;
+}
+
+/* ==================================================
+   PAINEL DE FERRAMENTAS TIPOGRÁFICAS (BARRA INFERIOR)
+   ================================================== */
+.typography-editor-control-panel {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: rgba(18, 18, 18, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 18px;
+  padding: 0.8rem 0.6rem 0.6rem;
+  margin-top: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  animation: slideUpTypoPanel 0.25s var(--ios-spring);
+}
+
+@keyframes slideUpTypoPanel {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Submenu de Opções Dinâmicas */
+.typo-submenu-bar {
+  padding: 0.2rem 0.4rem 0.6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.submenu-options-row {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.submenu-pill-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  color: #FFFFFF;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submenu-pill-btn.active {
+  background: #EAA1AC;
+  color: #111111;
+  font-weight: 600;
+  border-color: #EAA1AC;
+}
+
+.submenu-colors-scroll {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+  overflow-x: auto;
+  padding: 0.3rem 0.5rem;
+  scrollbar-width: none;
+}
+
+.submenu-colors-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.color-palette-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.2s var(--ios-spring);
+}
+
+.color-palette-dot.active {
+  transform: scale(1.2);
+  border-color: #FFFFFF;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+
+.submenu-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: #C0C0C0;
+  font-size: 0.85rem;
+  padding: 0 0.5rem;
+}
+
+.submenu-slider-row input {
+  flex: 1;
+  accent-color: #EAA1AC;
+}
+
+/* Carrossel Horizontal das 12 Ferramentas */
+.typography-tools-carousel {
+  display: flex;
+  gap: 1.1rem;
+  overflow-x: auto;
+  padding: 0.4rem 0.6rem 0.2rem;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  cursor: grab;
+  user-select: none;
+}
+
+.typography-tools-carousel.is-dragging {
+  cursor: grabbing;
+  scroll-behavior: auto;
+}
+
+.typography-tools-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.typo-tool-btn {
+  background: transparent;
+  border: none;
+  color: #CCCCCC;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 0.3rem 0;
+  transition: color 0.2s ease, transform 0.2s var(--ios-spring);
+}
+
+.typo-tool-btn:active {
+  transform: scale(0.92);
+}
+
+.typo-tool-btn.active,
+.typo-tool-btn.enabled {
+  color: #EAA1AC;
+}
+
+.tool-btn-icon {
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+}
+
+.text-bold-icon {
+  font-weight: 800;
+  font-family: sans-serif;
+}
+
+.text-italic-icon {
+  font-style: italic;
+  font-family: serif;
+}
+
+.text-underline-icon {
+  text-decoration: underline;
+  font-family: sans-serif;
+}
+
+.tool-btn-label {
+  font-size: 0.86rem;
+  font-weight: 500;
+}
+
+/* ==================================================
+   TELA: PESQUISAR FIGURINHAS (CATÁLOGO MODAL)
+   ================================================== */
+.sticker-picker-full-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--login-bg);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  animation: fadeInModal 0.2s ease-out;
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.sticker-picker-grid-container {
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  padding: 0.8rem 1.1rem 2rem;
+  box-sizing: border-box;
+}
+
+.sticker-picker-item-card {
+  background: #3A353A;
+  border-radius: 18px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: transform 0.2s var(--ios-spring), background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sticker-picker-item-card:hover {
+  background-color: #484248;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.sticker-picker-item-card:active {
+  transform: scale(0.94);
+}
+
+.picker-graphic-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* ==================================================
+   FIGURINHAS ADICIONADAS AO CANVAS
+   ================================================== */
+.canvas-stickers-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.canvas-placed-sticker-item {
+  cursor: pointer;
+  transition: transform 0.2s var(--ios-spring);
+}
+
+.canvas-placed-sticker-item:hover {
+  transform: scale(1.1);
+}
+
+.canvas-placed-sticker-item:active {
+  transform: scale(0.9);
+}
+

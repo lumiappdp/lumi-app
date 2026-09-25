@@ -1,0 +1,248 @@
+/* Estilos da Tela de Checkout e Confirmação de Pagamento Kiwify */
+
+.payment-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.payment-page.dark {
+  background: radial-gradient(circle at 50% 20%, #3d2337 0%, #231721 100%);
+  color: #FFFFFF;
+}
+
+.payment-page.light {
+  background: radial-gradient(circle at 50% 20%, #FFE9EC 0%, #FFFFFF 100%);
+  color: #231721;
+}
+
+.payment-card-wrapper {
+  width: 100%;
+  max-width: 440px;
+  background: rgba(45, 29, 43, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(234, 161, 172, 0.2);
+  border-radius: 28px;
+  padding: 2.2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
+}
+
+.payment-page.light .payment-card-wrapper {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(234, 161, 172, 0.4);
+  box-shadow: 0 15px 35px rgba(234, 161, 172, 0.2);
+}
+
+.payment-title {
+  font-family: var(--font-primary, sans-serif);
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0.5rem 0 0.3rem 0;
+  color: #FFFFFF;
+}
+
+.payment-page.light .payment-title {
+  color: #231721;
+}
+
+.payment-subtitle {
+  font-size: 0.88rem;
+  opacity: 0.8;
+  margin: 0 0 1.5rem 0;
+  line-height: 1.4;
+}
+
+/* Card de Resumo do Plano */
+.plan-summary-card {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(234, 161, 172, 0.3);
+  border-radius: 18px;
+  padding: 1.2rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.payment-page.light .plan-summary-card {
+  background: rgba(234, 161, 172, 0.08);
+  border-color: rgba(234, 161, 172, 0.5);
+}
+
+.plan-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+
+.summary-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.7;
+}
+
+.summary-badge {
+  background: linear-gradient(135deg, #EAA1AC, #D88390);
+  color: #FFFFFF;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+}
+
+.summary-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
+.summary-plan-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: #EAA1AC;
+}
+
+.summary-price .price-val {
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+.summary-price .price-unit {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  margin-left: 0.2rem;
+}
+
+.summary-email-dest {
+  font-size: 0.8rem;
+  opacity: 0.85;
+  margin: 0.4rem 0 0 0;
+  word-break: break-all;
+}
+
+/* Seção de Ação Kiwify */
+.kiwify-action-section {
+  width: 100%;
+  margin-bottom: 1.2rem;
+}
+
+.kiwify-checkout-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #EAA1AC 0%, #D88390 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 100px;
+  padding: 0.95rem 1.4rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 8px 20px rgba(234, 161, 172, 0.4);
+}
+
+.kiwify-checkout-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 25px rgba(234, 161, 172, 0.55);
+}
+
+.kiwify-hint {
+  font-size: 0.78rem;
+  opacity: 0.75;
+  margin-top: 0.6rem;
+}
+
+/* Indicador de Status em Tempo Real */
+.live-status-box {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  box-sizing: border-box;
+}
+
+.payment-page.light .live-status-box {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.pulse-dot {
+  width: 10px;
+  height: 10px;
+  background-color: #EAA1AC;
+  border-radius: 50%;
+  animation: pulseAnimation 1.5s infinite;
+}
+
+@keyframes pulseAnimation {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 10px #EAA1AC; }
+  100% { transform: scale(0.9); opacity: 0.7; }
+}
+
+.status-text {
+  font-size: 0.82rem;
+  margin: 0;
+  opacity: 0.9;
+}
+
+/* Botão de Verificação Manual e Voltar */
+.check-paid-btn {
+  background: transparent;
+  border: 1px solid rgba(234, 161, 172, 0.4);
+  color: #EAA1AC;
+  border-radius: 100px;
+  padding: 0.65rem 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  margin-bottom: 0.8rem;
+}
+
+.check-paid-btn:hover:not(:disabled) {
+  background: rgba(234, 161, 172, 0.15);
+  border-color: #EAA1AC;
+}
+
+.check-paid-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.back-link-btn {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 0.82rem;
+  opacity: 0.65;
+  cursor: pointer;
+  padding: 0.4rem;
+  transition: opacity 0.2s ease;
+}
+
+.back-link-btn:hover {
+  opacity: 1;
+  text-decoration: underline;
+}

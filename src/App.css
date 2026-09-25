@@ -1,0 +1,108 @@
+/* Estilos principais do componente App */
+.lumi-container {
+  max-width: 768px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  text-align: center;
+}
+
+/* Selo / Tagline */
+.lumi-badge {
+  display: inline-block;
+  padding: 0.35rem 1rem;
+  border-radius: var(--lumi-radius-full);
+  background-color: var(--lumi-surface-alt);
+  color: var(--lumi-green-primary);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  border: 1px solid var(--lumi-border-subtle);
+}
+
+/* Título e Destaques */
+.lumi-title {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 800;
+  color: var(--lumi-green-primary);
+  letter-spacing: -0.02em;
+}
+
+.lumi-accent {
+  color: var(--lumi-pink-accent);
+}
+
+.lumi-subtitle {
+  font-size: 1.15rem;
+  color: var(--lumi-text-secondary);
+  max-width: 480px;
+  margin-top: 0.5rem;
+  line-height: 1.6;
+}
+
+/* Lista de plataformas */
+.lumi-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.lumi-tag-btn {
+  background-color: var(--lumi-surface);
+  border: 1px solid var(--lumi-border-subtle);
+  color: var(--lumi-text-secondary);
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--lumi-radius-full);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.lumi-tag-btn:hover {
+  border-color: var(--lumi-green-primary);
+  color: var(--lumi-green-primary);
+}
+
+.lumi-tag-btn.active {
+  background-color: var(--lumi-green-primary);
+  border-color: var(--lumi-green-primary);
+  color: var(--lumi-surface);
+}
+
+/* Card central */
+.lumi-card {
+  background-color: var(--lumi-surface);
+  border: 1px solid var(--lumi-border-subtle);
+  border-radius: var(--lumi-radius-lg);
+  padding: 2rem;
+  box-shadow: var(--lumi-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  max-width: 520px;
+  width: 100%;
+}
+
+.lumi-card-icon {
+  font-size: 2.5rem;
+}
+
+.lumi-card-title {
+  font-size: 1.35rem;
+  color: var(--lumi-text-primary);
+  font-weight: 700;
+}
+
+.lumi-card-text {
+  font-size: 0.95rem;
+  color: var(--lumi-text-secondary);
+  line-height: 1.6;
+}
