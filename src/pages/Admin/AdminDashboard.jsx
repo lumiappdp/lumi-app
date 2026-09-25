@@ -1,5 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
-import { uploadSticker, getStickers, getCategories } from '../../services/stickersService';
+import { uploadSticker, getStickers } from '../../services/stickersService';
+import { 
+  getAllSections, 
+  createNicheSection, 
+  deleteNicheSection, 
+  addSubcardToSection, 
+  deleteSubcardFromSection, 
+  getCustomCovers 
+} from '../../services/categoriesService';
 import { supabase } from '../../services/supabaseClient';
 import './AdminDashboard.css';
 
@@ -23,6 +31,79 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
   const [previewUrls, setPreviewUrls] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadFeedback, setUploadFeedback] = useState(null);
+
+  // Estados para Gestão de Nichos e Subcards
+  const [allSections, setAllSections] = useState(() => getAllSections());
+  const [customCovers, setCustomCovers] = useState(() => getCustomCovers());
+  const [newNicheTitle, setNewNicheTitle] = useState('');
+  const [targetNicheId, setTargetNicheId] = useState(() => allSections[0]?.id || 'universais');
+  const [subcardOverlayText, setSubcardOverlayText] = useState('');
+  const [subcardTagLabel, setSubcardTagLabel] = useState('');
+  const [subcardImageFile, setSubcardImageFile] = useState(null);
+  const [subcardPreviewUrl, setSubcardPreviewUrl] = useState('');
+  const [categoryFeedback, setCategoryFeedback] = useState(null);
+
+  // Manipulador para criar novo Nicho
+  const handleCreateNicheSubmit = async (e) => {
+    e.preventDefault();
+    if (!newNicheTitle.trim()) return;
+
+    setCategoryFeedback(null);
+    try {
+      await createNicheSection(newNicheTitle);
+      const updated = getAllSections();
+      setAllSections(updated);
+      setNewNicheTitle('');
+      setCategoryFeedback({ type: 'success', message: `Nicho "${newNicheTitle}" criado com sucesso!` });
+    } catch (err) {
+      setCategoryFeedback({ type: 'error', message: err.message || 'Erro ao criar nicho.' });
+    }
+  };
+
+  // Manipulador para excluir Nicho
+  const handleDeleteNiche = (sectionId, title) => {
+    if (!window.confirm(`Tem certeza de que deseja excluir o nicho "${title}" e todos os seus subcards?`)) return;
+    const updated = deleteNicheSection(sectionId);
+    setAllSections(updated);
+    setCategoryFeedback({ type: 'success', message: `Nicho "${title}" removido com sucesso.` });
+  };
+
+  // Manipulador para adicionar Subcard
+  const handleAddSubcardSubmit = async (e) => {
+    e.preventDefault();
+    if (!subcardOverlayText.trim() || !targetNicheId) return;
+
+    setIsUploading(true);
+    setCategoryFeedback(null);
+    try {
+      await addSubcardToSection(targetNicheId, {
+        overlayText: subcardOverlayText,
+        tagLabel: subcardTagLabel,
+        fileOrUrl: subcardImageFile,
+      });
+
+      const updated = getAllSections();
+      setAllSections(updated);
+      setCustomCovers(getCustomCovers());
+      setSubcardOverlayText('');
+      setSubcardTagLabel('');
+      setSubcardImageFile(null);
+      setSubcardPreviewUrl('');
+      setCategoryFeedback({ type: 'success', message: 'Subcard adicionado com sucesso ao nicho!' });
+    } catch (err) {
+      setCategoryFeedback({ type: 'error', message: err.message || 'Erro ao salvar subcard.' });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Manipulador para excluir Subcard
+  const handleDeleteSubcard = (sectionId, cardId, text) => {
+    if (!window.confirm(`Deseja remover o card "${text}"?`)) return;
+    const updated = deleteSubcardFromSection(sectionId, cardId);
+    setAllSections(updated);
+    setCategoryFeedback({ type: 'success', message: `Card "${text}" removido com sucesso.` });
+  };
 
   // Lista de categorias e figurinhas cadastradas
   const [categoriesList, setCategoriesList] = useState([
@@ -375,14 +456,205 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
         </section>
       )}
 
-      {/* Conteúdo da Aba 2: Gestão de Categorias */}
+      {/* Conteúdo da Aba 2: Gestão de Nichos e Subcards */}
       {activeTab === 'categories' && (
         <section className="admin-content-section">
-          <div className="admin-form-card">
-            <h2 className="admin-section-heading">Categorias e Capas da Home</h2>
-            <p className="admin-empty-text">
-              Em breve: Adição dinâmica de novos nichos e upload de capas personalizadas para cada card da Home.
+          {/* Feedback de Criação de Nichos / Subcards */}
+          {categoryFeedback && (
+            <div className={`admin-feedback-alert ${categoryFeedback.type}`}>
+              {categoryFeedback.message}
+            </div>
+          )}
+
+          {/* Card 1: Criar Novo Nicho */}
+          <form className="admin-form-card" onSubmit={handleCreateNicheSubmit}>
+            <h2 className="admin-section-heading">Criar Novo Nicho (Seção Principal)</h2>
+            <p className="admin-field-hint" style={{ color: '#A0909C', fontSize: '0.82rem', marginBottom: '0.9rem' }}>
+              Exemplo: Maternidade, Casamento, Estética, Odontologia, Pets...
             </p>
+
+            <div className="admin-field-group">
+              <label>Nome do Nicho</label>
+              <input
+                type="text"
+                placeholder="Ex: Maternidade & Família"
+                value={newNicheTitle}
+                onChange={(e) => setNewNicheTitle(e.target.value)}
+                required
+              />
+            </div>
+
+            <button type="submit" className="admin-submit-btn" style={{ marginTop: '0.5rem' }}>
+              + Criar Novo Nicho
+            </button>
+          </form>
+
+          {/* Card 2: Adicionar Novo Subcard a um Nicho */}
+          <form className="admin-form-card" onSubmit={handleAddSubcardSubmit}>
+            <h2 className="admin-section-heading">Adicionar Subcard no Nicho</h2>
+
+            {/* Selecionar Nicho Pai */}
+            <div className="admin-field-group">
+              <label>Escolha o Nicho Pai</label>
+              <select
+                value={targetNicheId}
+                onChange={(e) => setTargetNicheId(e.target.value)}
+                className="admin-select"
+              >
+                {allSections.map(sec => (
+                  <option key={sec.id} value={sec.id}>
+                    {sec.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Texto de Sobreposição do Card */}
+            <div className="admin-field-group">
+              <label>Texto de Sobreposição (Frase do Card)</label>
+              <input
+                type="text"
+                placeholder="Ex: consultório moderno, rotina do bebê..."
+                value={subcardOverlayText}
+                onChange={(e) => setSubcardOverlayText(e.target.value)}
+                required
+              />
+            </div>
+
+            {/* Tag / Subtítulo */}
+            <div className="admin-field-group">
+              <label>Tag / Subtítulo do Card</label>
+              <input
+                type="text"
+                placeholder="Ex: Saúde | Clínica, Enxoval | Dicas..."
+                value={subcardTagLabel}
+                onChange={(e) => setSubcardTagLabel(e.target.value)}
+              />
+            </div>
+
+            {/* Upload da Imagem de Capa do Subcard */}
+            <div className="admin-field-group">
+              <label>Imagem de Capa do Card</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setSubcardImageFile(file);
+                    setSubcardPreviewUrl(URL.createObjectURL(file));
+                  }
+                }}
+              />
+              {subcardPreviewUrl && (
+                <div style={{ marginTop: '0.75rem', maxWidth: '140px', borderRadius: '12px', overflow: 'hidden' }}>
+                  <img src={subcardPreviewUrl} alt="Preview da Capa" style={{ width: '100%', display: 'block' }} />
+                </div>
+              )}
+            </div>
+
+            <button type="submit" disabled={isUploading} className="admin-submit-btn">
+              {isUploading ? 'Salvando Subcard...' : '+ Adicionar Subcard'}
+            </button>
+          </form>
+
+          {/* Lista e Gestão de Nichos Cadastrados */}
+          <div className="admin-gallery-card">
+            <h3 className="admin-section-heading">Nichos Ativos no App ({allSections.length})</h3>
+
+            <div className="admin-sections-manager-list" style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+              {allSections.map((sec) => (
+                <div 
+                  key={sec.id} 
+                  style={{
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(234,161,172,0.15)',
+                    borderRadius: '16px',
+                    padding: '1rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                    <div>
+                      <strong style={{ fontSize: '1.05rem', color: '#FFFFFF' }}>{sec.title}</strong>
+                      <span style={{ fontSize: '0.75rem', color: '#EAA1AC', marginLeft: '0.6rem' }}>
+                        ({sec.cards?.length || 0} subcards)
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteNiche(sec.id, sec.title)}
+                      style={{
+                        background: 'rgba(255, 77, 77, 0.15)',
+                        border: '1px solid #FF4D4D',
+                        color: '#FF8080',
+                        borderRadius: '8px',
+                        padding: '0.35rem 0.65rem',
+                        fontSize: '0.78rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Excluir Nicho
+                    </button>
+                  </div>
+
+                  {/* Subcards dentro deste Nicho */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '0.65rem' }}>
+                    {(sec.cards || []).map((card) => {
+                      const currentBg = customCovers[card.id] || card.bgImage;
+                      return (
+                        <div
+                          key={card.id}
+                          style={{
+                            position: 'relative',
+                            borderRadius: '12px',
+                            overflow: 'hidden',
+                            height: '110px',
+                            backgroundImage: `url(${currentBg})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'flex-end',
+                            padding: '0.5rem',
+                          }}
+                        >
+                          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.85) 100%)' }} />
+                          <span style={{ position: 'relative', zIndex: 2, fontSize: '0.75rem', fontWeight: 'bold', color: '#fff' }}>
+                            {card.overlayText}
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteSubcard(sec.id, card.id, card.overlayText)}
+                            style={{
+                              position: 'absolute',
+                              top: '4px',
+                              right: '4px',
+                              background: 'rgba(0,0,0,0.7)',
+                              border: 'none',
+                              color: '#fff',
+                              borderRadius: '50%',
+                              width: '22px',
+                              height: '22px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              zIndex: 3,
+                              fontSize: '11px',
+                            }}
+                            title="Remover subcard"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       )}

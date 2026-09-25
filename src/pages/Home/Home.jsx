@@ -10,7 +10,7 @@ import { recentService } from '../../services/recentService';
 import { usageService } from '../../services/usageService';
 import { getStickers } from '../../services/stickersService';
 import { checkIsAdmin } from '../../services/authService';
-import { getCustomCovers, updateCategoryCover } from '../../services/categoriesService';
+import { getCustomCovers, updateCategoryCover, getAllSections } from '../../services/categoriesService';
 import { InstallBanner } from '../../components/InstallBanner/InstallBanner';
 import { LegalModal } from '../Legal/LegalModal';
 import { LEGAL_DOCS } from '../Legal/legalContent';
@@ -555,117 +555,8 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
     }
   ];
 
-  // Dados das seções de conteúdo do Lumi App
-  const sections = [
-    {
-      id: 'universais',
-      title: 'Universais',
-      cards: [
-        {
-          id: 1,
-          overlayText: 'bolinho saudável',
-          tagLabel: 'Bebida | Comida',
-          bgImage: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-          id: 2,
-          overlayText: 'Feliz dia',
-          tagLabel: 'Bom dia | Boa tarde | Boa noite',
-          bgImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&auto=format&fit=crop&q=80',
-        },
-      ],
-    },
-    {
-      id: 'profissoes',
-      title: 'Profissões',
-      cards: [
-        {
-          id: 3,
-          overlayText: 'a defesa vem forte.',
-          tagLabel: '',
-          bgImage: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-          id: 4,
-          overlayText: 'achei na shô.',
-          tagLabel: '',
-          bgImage: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80',
-        },
-      ],
-    },
-    {
-      id: 'lojas-comercios',
-      title: 'Lojas | Comércios',
-      cards: [
-        {
-          id: 5,
-          overlayText: 'nova coleção',
-          tagLabel: 'Moda | Vitrine',
-          bgImage: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-          id: 6,
-          overlayText: 'detalhes que encantam',
-          tagLabel: 'Espaço | Produtos',
-          bgImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&auto=format&fit=crop&q=80',
-        },
-      ],
-    },
-    {
-      id: 'datas-comemorativas',
-      title: 'Datas comemorativas',
-      cards: [
-        {
-          id: 7,
-          overlayText: 'momentos especiais',
-          tagLabel: 'Celebrações',
-          bgImage: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-          id: 8,
-          overlayText: 'celebre cada conquista',
-          tagLabel: 'Especial',
-          bgImage: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=600&auto=format&fit=crop&q=80',
-        },
-      ],
-    },
-    {
-      id: 'repost',
-      title: 'Repost',
-      cards: [
-        {
-          id: 9,
-          overlayText: 'nosso dia a dia',
-          tagLabel: 'Bastidores',
-          bgImage: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-          id: 10,
-          overlayText: 'feito com carinho',
-          tagLabel: 'Comunidade',
-          bgImage: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&auto=format&fit=crop&q=80',
-        },
-      ],
-    },
-    {
-      id: 'minimalistas',
-      title: 'Minimalistas',
-      cards: [
-        {
-          id: 11,
-          overlayText: 'simplicidade & essência',
-          tagLabel: 'Clean',
-          bgImage: 'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=600&auto=format&fit=crop&q=80',
-        },
-        {
-          id: 12,
-          overlayText: 'menos é mais',
-          tagLabel: 'Conceito',
-          bgImage: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?w=600&auto=format&fit=crop&q=80',
-        },
-      ],
-    },
-  ];
+  // Dados das seções de conteúdo do Lumi App (carregados dinamicamente)
+  const sections = getAllSections();
 
   // Filtro de busca inteligente para os stickers das abas
   const searchNormalized = searchTerm.toLowerCase().trim();

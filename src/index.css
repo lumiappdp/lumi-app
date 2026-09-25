@@ -8,13 +8,18 @@
   box-sizing: border-box;
 }
 
-body {
-  font-family: var(--lumi-font-sans);
-  background-color: var(--lumi-bg-app);
+html, body {
+  background-color: #231721;
   color: var(--lumi-text-primary);
   min-height: 100vh;
+  margin: 0;
+  padding: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--lumi-font-sans);
 }
 
 /* Container centralizado e responsivo para telas móveis, tablets e desktop */
