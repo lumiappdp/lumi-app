@@ -740,10 +740,10 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
 
             {/* Texto de Sobreposição do Card */}
             <div className="admin-field-group">
-              <label>Texto de Sobreposição (Frase do Card)</label>
+              <label>Frase Central da Imagem (Texto Estilizado no Meio)</label>
               <input
                 type="text"
-                placeholder="Ex: consultório moderno, rotina do bebê..."
+                placeholder="Ex: consultório moderno, rotina jurídica, meu cantinho..."
                 value={subcardOverlayText}
                 onChange={(e) => setSubcardOverlayText(e.target.value)}
                 required
@@ -752,10 +752,10 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
 
             {/* Tag / Subtítulo */}
             <div className="admin-field-group">
-              <label>Tag / Subtítulo do Card</label>
+              <label>Nome da Subcategoria / Profissão (Etiqueta no Rodapé do Card)</label>
               <input
                 type="text"
-                placeholder="Ex: Saúde | Clínica, Enxoval | Dicas..."
+                placeholder="Ex: Advocacia, Odonto, Medicina, Fotografia..."
                 value={subcardTagLabel}
                 onChange={(e) => setSubcardTagLabel(e.target.value)}
               />
