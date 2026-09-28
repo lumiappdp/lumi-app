@@ -116,18 +116,33 @@ export async function createNicheSection(title) {
 }
 
 // Exclui um nicho inteiro no banco e localmente
+// @param {string} sectionId - Identificador único ou slug da seção
+// @returns {Promise<Array>} Lista atualizada de seções
 export async function deleteNicheSection(sectionId) {
+  // Atualiza imediatamente o cache local para resposta instantânea na interface
   const currentSections = getAllSections();
   const filtered = currentSections.filter(s => s.id !== sectionId);
   saveAllSections(filtered);
 
   try {
-    // Tenta deletar por slug ou por id no Supabase
-    await supabase
-      .from('categories')
-      .delete()
-      .or(`slug.eq.${sectionId},id.eq.${sectionId}`);
+    // Regex para validar se o identificador recebido é um formato UUID
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sectionId);
+
+    if (isUuid) {
+      // Se for UUID, deleta diretamente pelo campo ID
+      await supabase
+        .from('categories')
+        .delete()
+        .eq('id', sectionId);
+    } else {
+      // Caso contrário, deleta pelo slug da categoria
+      await supabase
+        .from('categories')
+        .delete()
+        .eq('slug', sectionId);
+    }
   } catch (err) {
+    // Registra aviso caso haja falha de conexão com o Supabase
     console.warn('Erro ao excluir categoria do Supabase:', err);
   }
 
