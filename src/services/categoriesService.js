@@ -99,14 +99,17 @@ export async function createNicheSection(title) {
 
   // Sincroniza com o Supabase para que todos os celulares recebam
   try {
-    await supabase.from('categories').upsert({
+    const { error: upsertError } = await supabase.from('categories').upsert({
       slug: slug,
-      name: cleanTitle,
+      title: cleanTitle,
       display_order: updatedSections.length,
-      cards: []
     }, { onConflict: 'slug' });
+
+    if (upsertError) {
+      console.error('Erro ao salvar categoria no Supabase:', upsertError);
+    }
   } catch (err) {
-    console.warn('Erro ao salvar categoria no Supabase:', err);
+    console.warn('Erro na requisição ao Supabase:', err);
   }
 
   return newSection;
@@ -182,14 +185,13 @@ export async function addSubcardToSection(sectionId, { overlayText, tagLabel, fi
 
   saveAllSections(updatedSections);
 
-  // Sincroniza os subcards no Supabase
+  // Sincroniza a capa da categoria no Supabase
   try {
     const targetSec = updatedSections.find(s => s.id === sectionId);
     if (targetSec) {
       await supabase.from('categories').upsert({
         slug: targetSec.id,
-        name: targetSec.title,
-        cards: targetSec.cards,
+        title: targetSec.title,
         cover_url: targetSec.cards[0]?.bgImage || null
       }, { onConflict: 'slug' });
     }
