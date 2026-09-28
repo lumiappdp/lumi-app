@@ -11,6 +11,7 @@ import { AdminDashboard } from './pages/Admin/AdminDashboard';
 import { AllSubcategories } from './pages/AllSubcategories/AllSubcategories';
 import { PaymentCheckout } from './pages/PaymentCheckout/PaymentCheckout';
 import { ForgotPassword } from './pages/ForgotPassword/ForgotPassword';
+import { logoutUser } from './services/authService';
 
 // Componente Raiz da Aplicação (Lumi App)
 // Gerencia a navegação entre telas, autenticação, detalhes de categoria, favoritos, criação e tema global
@@ -18,8 +19,11 @@ function App() {
   // Estado para controlar a exibição da Splash Screen inicial
   const [showSplash, setShowSplash] = useState(true);
 
-  // Estado da rota ativa da aplicação ('login', 'register', 'home', 'profile', 'category-detail', 'favorites', 'create-sticker', 'admin' ou 'all-subcategories')
-  const [currentScreen, setCurrentScreen] = useState('login');
+  // Estado da rota ativa da aplicação: se o usuário já estiver logado, inicia direto na 'home'
+  const [currentScreen, setCurrentScreen] = useState(() => {
+    const savedUserEmail = localStorage.getItem('lumi-user-email');
+    return savedUserEmail ? 'home' : 'login';
+  });
 
   // Estado para armazenar o título da categoria/subcategoria selecionada pelo usuário
   const [selectedCategory, setSelectedCategory] = useState('Bebida | Comida');
@@ -67,8 +71,23 @@ function App() {
     setCurrentScreen('home');
   };
 
-  // Callback disparado ao realizar logout
-  const handleLogout = () => {
+  // Callback disparado ao realizar logout explícito
+  const handleLogout = async () => {
+    // Limpa todas as informações de sessão salvas localmente
+    localStorage.removeItem('lumi-user-email');
+    localStorage.removeItem('lumi-user-role');
+    localStorage.removeItem('lumi-user-name');
+    localStorage.removeItem('lumi-user-username');
+    localStorage.removeItem('lumi-user-plan');
+
+    // Executa encerramento de sessão no Supabase
+    try {
+      await logoutUser();
+    } catch (err) {
+      console.warn('Erro ao encerrar sessão no Supabase:', err);
+    }
+
+    // Redireciona para a tela de autenticação
     setCurrentScreen('login');
   };
 

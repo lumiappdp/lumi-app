@@ -4,22 +4,34 @@ import {
   getAllSections, 
   getSectionsFromSupabase,
   createNicheSection, 
+  updateNicheSection,
   deleteNicheSection, 
   addSubcardToSection, 
   deleteSubcardFromSection, 
   getCustomCovers,
   getCustomCoversFromSupabase
 } from '../../services/categoriesService';
+import { 
+  getAdminUsers, 
+  updateUserPaymentStatus, 
+  updateUserPlan, 
+  getTeamMembers, 
+  addTeamMember, 
+  removeTeamMember, 
+  getGlobalAnnouncement, 
+  saveGlobalAnnouncement,
+  getUserSuggestions
+} from '../../services/adminService';
 import { supabase } from '../../services/supabaseClient';
 import './AdminDashboard.css';
 
 // Componente do Painel de Administração do Lumi App
-// Permite ao administrador fazer upload de figurinhas para o Storage/DB, cadastrar categorias e gerenciar o catálogo
+// Permite ao administrador fazer upload de figurinhas para o Storage/DB, cadastrar categorias, gerenciar clientes, equipe e avisos
 // @param {Object} props - Propriedades do componente
 // @param {string} props.theme - Tema ativo da aplicação ('light' ou 'dark')
 // @param {Function} props.onBack - Callback para retornar à tela anterior (Perfil ou Home)
 export function AdminDashboard({ theme = 'dark', onBack }) {
-  // Controle de abas ativas do painel admin ('stickers' ou 'categories')
+  // Controle de abas ativas do painel admin ('stickers', 'categories', 'users', 'team', 'announcements')
   const [activeTab, setActiveTab] = useState('stickers');
 
   // Estados do formulário de upload de figurinha
@@ -45,6 +57,29 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
   const [subcardPreviewUrl, setSubcardPreviewUrl] = useState('');
   const [categoryFeedback, setCategoryFeedback] = useState(null);
 
+  // Estados para Edição de Nicho / Categoria
+  const [editingNiche, setEditingNiche] = useState(null);
+  const [editNicheTitle, setEditNicheTitle] = useState('');
+  const [editNicheCoverFile, setEditNicheCoverFile] = useState(null);
+  const [editNichePreviewUrl, setEditNichePreviewUrl] = useState('');
+
+  // Estados para Gestão de Clientes & Suporte
+  const [userList, setUserList] = useState([]);
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [userFeedback, setUserFeedback] = useState(null);
+
+  // Estados para Gestão de Equipe
+  const [teamList, setTeamList] = useState(() => getTeamMembers());
+  const [newTeamName, setNewTeamName] = useState('');
+  const [newTeamEmail, setNewTeamEmail] = useState('');
+  const [newTeamRole, setNewTeamRole] = useState('Designer');
+  const [teamFeedback, setTeamFeedback] = useState(null);
+
+  // Estados para Avisos Globais e Métricas
+  const [announcement, setAnnouncement] = useState(() => getGlobalAnnouncement());
+  const [announcementFeedback, setAnnouncementFeedback] = useState(null);
+  const [userSuggestionsList, setUserSuggestionsList] = useState(() => getUserSuggestions());
+
   // Carrega seções sincronizadas diretamente do Supabase
   const loadSections = async () => {
     try {
@@ -57,11 +92,82 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
     }
   };
 
-  // Carrega seções e figurinhas ao montar o painel
+  // Carrega lista de usuários para a aba de Suporte
+  const loadUsers = async () => {
+    try {
+      const data = await getAdminUsers();
+      setUserList(data);
+    } catch (err) {
+      console.warn('Erro ao listar usuários:', err);
+    }
+  };
+
+  // Carrega seções e dados ao montar o painel
   useEffect(() => {
     loadSections();
     loadStickers();
+    loadUsers();
   }, []);
+
+  // Alterna o status de pagamento do usuário (Ativo <-> Inativo)
+  const handleToggleUserStatus = async (user) => {
+    const isCurrentlyActive = user.payment_status === 'active' || user.payment_status === 'paid';
+    const newStatus = isCurrentlyActive ? 'inactive' : 'active';
+    try {
+      await updateUserPaymentStatus(user.email, newStatus);
+      setUserList(prev => prev.map(u => u.email === user.email ? { ...u, payment_status: newStatus } : u));
+      setUserFeedback({ type: 'success', message: `Status de ${user.email} alterado para ${newStatus.toUpperCase()} com sucesso!` });
+    } catch (err) {
+      setUserFeedback({ type: 'error', message: err.message || 'Erro ao alterar status.' });
+    }
+  };
+
+  // Altera o plano do usuário (Mensal / Anual)
+  const handleChangeUserPlan = async (user, newPlan) => {
+    try {
+      await updateUserPlan(user.email, newPlan);
+      setUserList(prev => prev.map(u => u.email === user.email ? { ...u, plan: newPlan } : u));
+      setUserFeedback({ type: 'success', message: `Plano de ${user.email} atualizado para ${newPlan === 'annual' ? 'Anual' : 'Mensal'}.` });
+    } catch (err) {
+      setUserFeedback({ type: 'error', message: err.message || 'Erro ao atualizar plano.' });
+    }
+  };
+
+  // Cadastra novo membro da equipe
+  const handleAddTeamSubmit = (e) => {
+    e.preventDefault();
+    if (!newTeamName.trim() || !newTeamEmail.trim()) return;
+
+    try {
+      const updated = addTeamMember({
+        name: newTeamName,
+        email: newTeamEmail,
+        role: newTeamRole
+      });
+      setTeamList(updated);
+      setNewTeamName('');
+      setNewTeamEmail('');
+      setTeamFeedback({ type: 'success', message: 'Membro adicionado à equipe com sucesso!' });
+    } catch (err) {
+      setTeamFeedback({ type: 'error', message: err.message || 'Erro ao adicionar membro.' });
+    }
+  };
+
+  // Remove membro da equipe
+  const handleRemoveTeam = (memberId, name) => {
+    if (!window.confirm(`Deseja remover ${name} da equipe?`)) return;
+    const updated = removeTeamMember(memberId);
+    setTeamList(updated);
+    setTeamFeedback({ type: 'success', message: `${name} removido da equipe.` });
+  };
+
+  // Salva o aviso global do App
+  const handleSaveAnnouncementSubmit = (e) => {
+    e.preventDefault();
+    saveGlobalAnnouncement(announcement);
+    setAnnouncementFeedback({ type: 'success', message: 'Aviso global salvo e publicado em tempo real!' });
+    setTimeout(() => setAnnouncementFeedback(null), 3500);
+  };
 
   // Manipulador para criar novo Nicho
   const handleCreateNicheSubmit = async (e) => {
@@ -89,6 +195,47 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
       await loadSections();
     } catch (err) {
       setCategoryFeedback({ type: 'error', message: err.message || 'Erro ao excluir nicho.' });
+    }
+  };
+
+  // Abre modal / formulário para editar Nicho
+  const handleOpenEditNiche = (niche) => {
+    setEditingNiche(niche);
+    setEditNicheTitle(niche.title || '');
+    setEditNicheCoverFile(null);
+    setEditNichePreviewUrl(niche.cards?.[0]?.bgImage || '');
+  };
+
+  // Fecha o modal de edição
+  const handleCloseEditNiche = () => {
+    setEditingNiche(null);
+    setEditNicheTitle('');
+    setEditNicheCoverFile(null);
+    setEditNichePreviewUrl('');
+  };
+
+  // Salva alterações do Nicho no Supabase e localmente
+  const handleSaveEditNicheSubmit = async (e) => {
+    e.preventDefault();
+    if (!editingNiche) return;
+
+    setIsUploading(true);
+    setCategoryFeedback(null);
+
+    try {
+      const updated = await updateNicheSection(editingNiche.id, {
+        title: editNicheTitle,
+        coverFileOrUrl: editNicheCoverFile,
+      });
+
+      setAllSections(updated);
+      setCategoryFeedback({ type: 'success', message: 'Nicho atualizado com sucesso!' });
+      handleCloseEditNiche();
+      await loadSections();
+    } catch (err) {
+      setCategoryFeedback({ type: 'error', message: err.message || 'Erro ao atualizar nicho.' });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -286,14 +433,38 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
           className={`admin-tab-btn ${activeTab === 'stickers' ? 'active' : ''}`}
           onClick={() => setActiveTab('stickers')}
         >
-          Figurinhas & Upload
+          Figurinhas
         </button>
         <button
           type="button"
           className={`admin-tab-btn ${activeTab === 'categories' ? 'active' : ''}`}
           onClick={() => setActiveTab('categories')}
         >
-          Categorias & Capas
+          Nichos
+        </button>
+        <button
+          type="button"
+          className={`admin-tab-btn ${activeTab === 'users' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('users');
+            loadUsers();
+          }}
+        >
+          Clientes
+        </button>
+        <button
+          type="button"
+          className={`admin-tab-btn ${activeTab === 'team' ? 'active' : ''}`}
+          onClick={() => setActiveTab('team')}
+        >
+          Equipe
+        </button>
+        <button
+          type="button"
+          className={`admin-tab-btn ${activeTab === 'announcements' ? 'active' : ''}`}
+          onClick={() => setActiveTab('announcements')}
+        >
+          Avisos & Métricas
         </button>
       </nav>
 
@@ -639,21 +810,45 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
                       </span>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteNiche(sec.id, sec.title)}
-                      style={{
-                        background: 'rgba(255, 77, 77, 0.15)',
-                        border: '1px solid #FF4D4D',
-                        color: '#FF8080',
-                        borderRadius: '8px',
-                        padding: '0.35rem 0.65rem',
-                        fontSize: '0.78rem',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Excluir Nicho
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditNiche(sec)}
+                        style={{
+                          background: 'rgba(234, 161, 172, 0.15)',
+                          border: '1px solid #EAA1AC',
+                          color: '#EAA1AC',
+                          borderRadius: '8px',
+                          padding: '0.35rem 0.65rem',
+                          fontSize: '0.78rem',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path>
+                        </svg>
+                        Editar
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteNiche(sec.id, sec.title)}
+                        style={{
+                          background: 'rgba(255, 77, 77, 0.15)',
+                          border: '1px solid #FF4D4D',
+                          color: '#FF8080',
+                          borderRadius: '8px',
+                          padding: '0.35rem 0.65rem',
+                          fontSize: '0.78rem',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Excluir Nicho
+                      </button>
+                    </div>
                   </div>
 
                   {/* Subcards dentro deste Nicho */}
@@ -715,6 +910,472 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
             </div>
           </div>
         </section>
+      )}
+
+      {/* Conteúdo da Aba 3: Gestão de Clientes & Suporte Imediato */}
+      {activeTab === 'users' && (
+        <section className="admin-content-section">
+          {userFeedback && (
+            <div className={`admin-feedback-alert ${userFeedback.type}`}>
+              {userFeedback.message}
+            </div>
+          )}
+
+          <div className="admin-form-card">
+            <h2 className="admin-section-heading">Gestão de Clientes & Acesso</h2>
+            <p style={{ color: '#A0909C', fontSize: '0.85rem', marginBottom: '1.2rem' }}>
+              Libere ou bloqueie o acesso de clientes instantaneamente em caso de PIX direto ou suporte.
+            </p>
+
+            {/* Campo de Busca de Clientes */}
+            <div className="admin-field-group">
+              <label>Buscar Cliente por E-mail ou Nome</label>
+              <input
+                type="text"
+                placeholder="Ex: cliente@gmail.com ou Maria..."
+                value={userSearchTerm}
+                onChange={(e) => setUserSearchTerm(e.target.value)}
+              />
+            </div>
+
+            {/* Lista de Usuários */}
+            <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+              {userList
+                .filter(u => {
+                  if (!userSearchTerm) return true;
+                  const term = userSearchTerm.toLowerCase();
+                  return (u.email || '').toLowerCase().includes(term) || (u.name || '').toLowerCase().includes(term);
+                })
+                .map((u) => {
+                  const isActive = u.payment_status === 'active' || u.payment_status === 'paid';
+                  return (
+                    <div 
+                      key={u.id || u.email}
+                      style={{
+                        background: 'rgba(255,255,255,0.03)',
+                        border: `1px solid ${isActive ? 'rgba(181, 206, 107, 0.3)' : 'rgba(255, 77, 77, 0.3)'}`,
+                        borderRadius: '16px',
+                        padding: '1rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.6rem'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <strong style={{ fontSize: '1rem', color: '#FFF' }}>{u.name || 'Usuário Sem Nome'}</strong>
+                          <div style={{ fontSize: '0.8rem', color: '#A0909C' }}>{u.email}</div>
+                        </div>
+
+                        {/* Badge de Status */}
+                        <span 
+                          style={{
+                            fontSize: '0.72rem',
+                            fontWeight: 'bold',
+                            padding: '0.2rem 0.6rem',
+                            borderRadius: '20px',
+                            background: isActive ? 'rgba(181, 206, 107, 0.15)' : 'rgba(255, 77, 77, 0.15)',
+                            color: isActive ? '#B5CE6B' : '#FF8080',
+                            border: `1px solid ${isActive ? '#B5CE6B' : '#FF4D4D'}`
+                          }}
+                        >
+                          {isActive ? 'ACESSO ATIVO' : 'BLOQUEADO'}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', marginTop: '0.4rem' }}>
+                        {/* Seletor de Plano */}
+                        <select
+                          value={u.plan || 'annual'}
+                          onChange={(e) => handleChangeUserPlan(u, e.target.value)}
+                          className="admin-select"
+                          style={{ fontSize: '0.8rem', padding: '0.35rem 0.6rem', width: 'auto' }}
+                        >
+                          <option value="annual">Plano Anual</option>
+                          <option value="monthly">Plano Mensal</option>
+                        </select>
+
+                        {/* Botão de Liberação / Bloqueio Manual */}
+                        <button
+                          type="button"
+                          onClick={() => handleToggleUserStatus(u)}
+                          style={{
+                            background: isActive ? 'rgba(255, 77, 77, 0.15)' : 'rgba(181, 206, 107, 0.15)',
+                            border: `1px solid ${isActive ? '#FF4D4D' : '#B5CE6B'}`,
+                            color: isActive ? '#FF8080' : '#B5CE6B',
+                            borderRadius: '8px',
+                            padding: '0.4rem 0.8rem',
+                            fontSize: '0.78rem',
+                            fontWeight: '600',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {isActive ? 'Bloquear Acesso' : 'Liberar Acesso Instantâneo'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+
+              {userList.length === 0 && (
+                <p style={{ color: '#A0909C', textAlign: 'center', fontSize: '0.88rem' }}>
+                  Nenhum usuário cadastrado encontrado no banco.
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Conteúdo da Aba 4: Gestão de Equipe & Designers */}
+      {activeTab === 'team' && (
+        <section className="admin-content-section">
+          {teamFeedback && (
+            <div className={`admin-feedback-alert ${teamFeedback.type}`}>
+              {teamFeedback.message}
+            </div>
+          )}
+
+          {/* Card: Cadastrar Membro da Equipe */}
+          <form className="admin-form-card" onSubmit={handleAddTeamSubmit}>
+            <h2 className="admin-section-heading">Adicionar Membro na Equipe</h2>
+            <p style={{ color: '#A0909C', fontSize: '0.82rem', marginBottom: '1rem' }}>
+              Permita que designers e assistentes ajudem no upload de figurinhas.
+            </p>
+
+            <div className="admin-field-group">
+              <label>Nome do Colaborador</label>
+              <input
+                type="text"
+                placeholder="Ex: Ana Designer"
+                value={newTeamName}
+                onChange={(e) => setNewTeamName(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="admin-field-group">
+              <label>E-mail do Colaborador</label>
+              <input
+                type="email"
+                placeholder="Ex: ana.design@gmail.com"
+                value={newTeamEmail}
+                onChange={(e) => setNewTeamEmail(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="admin-field-group">
+              <label>Função / Permissão</label>
+              <select
+                value={newTeamRole}
+                onChange={(e) => setNewTeamRole(e.target.value)}
+                className="admin-select"
+              >
+                <option value="Designer">Designer (Upload de Figurinhas & Capas)</option>
+                <option value="Suporte">Suporte ao Cliente</option>
+                <option value="Admin">Administrador Geral</option>
+              </select>
+            </div>
+
+            <button type="submit" className="admin-submit-btn" style={{ marginTop: '0.5rem' }}>
+              + Cadastrar Colaborador
+            </button>
+          </form>
+
+          {/* Lista de Membros da Equipe */}
+          <div className="admin-gallery-card">
+            <h3 className="admin-section-heading">Equipe Ativa ({teamList.length})</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+              {teamList.map(member => (
+                <div 
+                  key={member.id}
+                  style={{
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(234,161,172,0.2)',
+                    borderRadius: '14px',
+                    padding: '0.9rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                  }}
+                >
+                  <div>
+                    <strong style={{ color: '#FFF', fontSize: '0.95rem' }}>{member.name}</strong>
+                    <div style={{ color: '#A0909C', fontSize: '0.78rem' }}>{member.email}</div>
+                    <span style={{ fontSize: '0.72rem', color: '#EAA1AC', fontWeight: 'bold' }}>{member.role}</span>
+                  </div>
+
+                  {member.email !== 'contato.lumiapp@gmail.com' && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTeam(member.id, member.name)}
+                      style={{
+                        background: 'rgba(255,77,77,0.15)',
+                        border: '1px solid #FF4D4D',
+                        color: '#FF8080',
+                        borderRadius: '8px',
+                        padding: '0.35rem 0.65rem',
+                        fontSize: '0.75rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Remover
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Conteúdo da Aba 5: Avisos Globais & Métricas */}
+      {activeTab === 'announcements' && (
+        <section className="admin-content-section">
+          {announcementFeedback && (
+            <div className={`admin-feedback-alert ${announcementFeedback.type}`}>
+              {announcementFeedback.message}
+            </div>
+          )}
+
+          {/* Cards de Métricas em Tempo Real */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+            <div className="admin-form-card" style={{ padding: '1rem', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.6rem', fontWeight: '800', color: '#EAA1AC' }}>
+                {recentStickers.length}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#A0909C', marginTop: '0.2rem' }}>
+                Figurinhas Ativas
+              </div>
+            </div>
+
+            <div className="admin-form-card" style={{ padding: '1rem', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.6rem', fontWeight: '800', color: '#B5CE6B' }}>
+                {allSections.length}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#A0909C', marginTop: '0.2rem' }}>
+                Nichos Criados
+              </div>
+            </div>
+
+            <div className="admin-form-card" style={{ padding: '1rem', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.6rem', fontWeight: '800', color: '#FFF' }}>
+                {userList.filter(u => u.payment_status === 'active' || u.payment_status === 'paid').length}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#A0909C', marginTop: '0.2rem' }}>
+                Assinantes Ativos
+              </div>
+            </div>
+          </div>
+
+          {/* Formulário de Aviso Global no App */}
+          <form className="admin-form-card" onSubmit={handleSaveAnnouncementSubmit}>
+            <h2 className="admin-section-heading">Banner de Aviso Global no App</h2>
+            <p style={{ color: '#A0909C', fontSize: '0.82rem', marginBottom: '1.2rem' }}>
+              Exibe uma barra elegante de novidades ou comunicado importante no topo da Home de todos os celulares.
+            </p>
+
+            <div className="admin-field-group">
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={announcement.active}
+                  onChange={(e) => setAnnouncement(prev => ({ ...prev, active: e.target.checked }))}
+                  style={{ width: '18px', height: '18px', accentColor: '#EAA1AC' }}
+                />
+                <span style={{ fontSize: '0.92rem', color: '#FFF', fontWeight: 'bold' }}>
+                  Ativar Aviso Global no Aplicativo
+                </span>
+              </label>
+            </div>
+
+            <div className="admin-field-group" style={{ marginTop: '1rem' }}>
+              <label>Mensagem do Aviso</label>
+              <input
+                type="text"
+                placeholder="Ex: ✨ 50 Novas figurinhas de Casamento adicionadas hoje!"
+                value={announcement.text}
+                onChange={(e) => setAnnouncement(prev => ({ ...prev, text: e.target.value }))}
+                required={announcement.active}
+              />
+            </div>
+
+            <div className="admin-field-group">
+              <label>Tipo do Aviso</label>
+              <select
+                value={announcement.type || 'novidade'}
+                onChange={(e) => setAnnouncement(prev => ({ ...prev, type: e.target.value }))}
+                className="admin-select"
+              >
+                <option value="novidade">Novidade & Lançamento (Destaque Rosé)</option>
+                <option value="alerta">Aviso Importante / Comunicado (Dourado)</option>
+              </select>
+            </div>
+
+            <button type="submit" className="admin-submit-btn" style={{ marginTop: '0.5rem' }}>
+              Salvar e Publicar Aviso
+            </button>
+          </form>
+
+          {/* Lista de Sugestões Enviadas pelos Clientes */}
+          <div className="admin-gallery-card">
+            <h3 className="admin-section-heading">
+              Sugestões e Pedidos dos Clientes ({userSuggestionsList.length})
+            </h3>
+            
+            {userSuggestionsList.length === 0 ? (
+              <p style={{ color: '#A0909C', textAlign: 'center', fontSize: '0.88rem' }}>
+                Nenhuma sugestão enviada por clientes até o momento.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                {userSuggestionsList.map((sug) => (
+                  <div
+                    key={sug.id}
+                    style={{
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid rgba(234,161,172,0.2)',
+                      borderRadius: '14px',
+                      padding: '1rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.4rem'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#EAA1AC', background: 'rgba(234,161,172,0.15)', padding: '0.2rem 0.6rem', borderRadius: '12px' }}>
+                        {sug.type || 'Geral'}
+                      </span>
+                      <span style={{ fontSize: '0.72rem', color: '#A0909C' }}>
+                        {sug.created_at ? new Date(sug.created_at).toLocaleDateString('pt-BR') : ''}
+                      </span>
+                    </div>
+
+                    <p style={{ color: '#FFF', fontSize: '0.9rem', margin: '0.3rem 0', lineHeight: 1.4 }}>
+                      "{sug.suggestion_text || sug.message}"
+                    </p>
+
+                    <div style={{ fontSize: '0.75rem', color: '#A0909C' }}>
+                      Por: {sug.user_name || 'Anônimo'} {sug.user_email ? `(${sug.user_email})` : ''}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Modal Flutuante de Edição do Nicho */}
+      {editingNiche && (
+        <div 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.75)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem'
+          }}
+          onClick={handleCloseEditNiche}
+        >
+          <div 
+            style={{
+              background: '#1F151E',
+              border: '1px solid rgba(234,161,172,0.3)',
+              borderRadius: '20px',
+              maxWidth: '440px',
+              width: '100%',
+              padding: '1.5rem',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.2rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#FFF' }}>Editar Nicho</h3>
+              <button 
+                type="button" 
+                onClick={handleCloseEditNiche}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#A0909C',
+                  fontSize: '1.2rem',
+                  cursor: 'pointer'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditNicheSubmit}>
+              {/* Campo: Nome do Nicho */}
+              <div className="admin-field-group" style={{ marginBottom: '1rem' }}>
+                <label>Nome do Nicho</label>
+                <input
+                  type="text"
+                  value={editNicheTitle}
+                  onChange={(e) => setEditNicheTitle(e.target.value)}
+                  required
+                />
+              </div>
+
+              {/* Campo: Nova Imagem de Capa do Nicho */}
+              <div className="admin-field-group" style={{ marginBottom: '1.2rem' }}>
+                <label>Alterar Capa Principal</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setEditNicheCoverFile(file);
+                      setEditNichePreviewUrl(URL.createObjectURL(file));
+                    }
+                  }}
+                />
+                {editNichePreviewUrl && (
+                  <div style={{ marginTop: '0.75rem', maxWidth: '140px', borderRadius: '12px', overflow: 'hidden' }}>
+                    <img src={editNichePreviewUrl} alt="Preview da Capa" style={{ width: '100%', display: 'block' }} />
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button
+                  type="button"
+                  onClick={handleCloseEditNiche}
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '12px',
+                    color: '#FFF',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={isUploading}
+                  className="admin-submit-btn"
+                  style={{ flex: 1, margin: 0 }}
+                >
+                  {isUploading ? 'Salvando...' : 'Salvar Alterações'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -427,6 +427,42 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
         <img src={theme === 'dark' ? lumiLogoDark : lumiLogoLight} alt="Lumi" className="home-lumi-logo" />
       </header>
 
+      {/* Banner de Aviso Global Ativado pelo Administrador */}
+      {(() => {
+        try {
+          const ann = JSON.parse(localStorage.getItem('lumi_global_announcement') || '{}');
+          if (ann && ann.active && ann.text) {
+            const isAlert = ann.type === 'alerta';
+            return (
+              <div 
+                style={{
+                  maxWidth: '600px',
+                  margin: '0 auto 1rem auto',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '14px',
+                  background: isAlert ? 'rgba(255, 184, 77, 0.12)' : 'rgba(234, 161, 172, 0.12)',
+                  border: `1px solid ${isAlert ? 'rgba(255, 184, 77, 0.35)' : 'rgba(234, 161, 172, 0.35)'}`,
+                  color: isAlert ? '#FFD180' : '#FFD9E0',
+                  fontSize: '0.85rem',
+                  fontWeight: '600',
+                  textAlign: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  animation: 'fadeIn 0.3s ease'
+                }}
+              >
+                <span>{ann.text}</span>
+              </div>
+            );
+          }
+        } catch {
+          return null;
+        }
+        return null;
+      })()}
+
       {/* Banner Inteligente de Instalação do PWA no Celular */}
       <InstallBanner onOpenGuide={() => setActiveInstallModal(LEGAL_DOCS.install)} />
 

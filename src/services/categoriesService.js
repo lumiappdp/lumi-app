@@ -149,6 +149,82 @@ export async function deleteNicheSection(sectionId) {
   return filtered;
 }
 
+// Atualiza as informações de um nicho / categoria (título e imagem de capa)
+// @param {string} sectionId - ID ou Slug da seção a ser editada
+// @param {Object} data - Objeto contendo { title, coverFileOrUrl }
+// @returns {Promise<Array>} Lista atualizada de seções
+export async function updateNicheSection(sectionId, { title, coverFileOrUrl }) {
+  const currentSections = getAllSections();
+  let newCoverUrl = null;
+
+  // Realiza upload da nova imagem para o Supabase Storage se for um arquivo File
+  if (coverFileOrUrl instanceof File) {
+    try {
+      const fileExt = coverFileOrUrl.name.split('.').pop() || 'png';
+      const fileName = `covers/niche_${Date.now()}.${fileExt}`;
+      const { data, error } = await supabase.storage
+        .from('stickers')
+        .upload(fileName, coverFileOrUrl, { cacheControl: '3600', upsert: true });
+
+      if (!error && data) {
+        const { data: pub } = supabase.storage.from('stickers').getPublicUrl(fileName);
+        newCoverUrl = pub.publicUrl;
+      }
+    } catch (uploadErr) {
+      console.warn('Erro ao enviar capa do nicho:', uploadErr);
+    }
+  } else if (typeof coverFileOrUrl === 'string' && coverFileOrUrl) {
+    newCoverUrl = coverFileOrUrl;
+  }
+
+  // Atualiza no cache local
+  const updatedSections = currentSections.map(sec => {
+    if (sec.id === sectionId) {
+      const updatedCards = [...(sec.cards || [])];
+      if (newCoverUrl) {
+        if (updatedCards.length > 0) {
+          updatedCards[0] = { ...updatedCards[0], bgImage: newCoverUrl };
+        } else {
+          updatedCards.push({
+            id: `card-${Date.now()}`,
+            overlayText: title || sec.title,
+            tagLabel: title || sec.title,
+            bgImage: newCoverUrl
+          });
+        }
+      }
+      return {
+        ...sec,
+        title: title ? title.trim() : sec.title,
+        cards: updatedCards,
+      };
+    }
+    return sec;
+  });
+
+  saveAllSections(updatedSections);
+
+  // Sincroniza atualização na tabela categories do Supabase
+  try {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sectionId);
+    const updatePayload = {};
+    if (title) updatePayload.title = title.trim();
+    if (newCoverUrl) updatePayload.cover_url = newCoverUrl;
+
+    if (Object.keys(updatePayload).length > 0) {
+      if (isUuid) {
+        await supabase.from('categories').update(updatePayload).eq('id', sectionId);
+      } else {
+        await supabase.from('categories').update(updatePayload).eq('slug', sectionId);
+      }
+    }
+  } catch (err) {
+    console.warn('Erro ao atualizar categoria no Supabase:', err);
+  }
+
+  return updatedSections;
+}
+
 // Adiciona um novo subcard dentro de um nicho específico
 // @param {string} sectionId - ID do nicho pai
 // @param {Object} cardData - { overlayText, tagLabel, fileOrUrl }

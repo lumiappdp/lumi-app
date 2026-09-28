@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { checkIsAdmin, deleteAccountUser } from '../../services/authService';
+import { sendUserSuggestion } from '../../services/adminService';
 import { LegalModal } from '../Legal/LegalModal';
 import { LEGAL_DOCS } from '../Legal/legalContent';
 import './Profile.css';
@@ -18,6 +19,13 @@ export function Profile({ theme = 'dark', onToggleTheme, onNavigate, onLogout })
   // Estado para controlar qual modal legal/suporte está aberto
   const [activeModalDoc, setActiveModalDoc] = useState(null);
 
+  // Estados para Modal de Sugestão de Nichos / Ideias
+  const [isSuggestionModalOpen, setIsSuggestionModalOpen] = useState(false);
+  const [suggestionType, setSuggestionType] = useState('Novo Nicho');
+  const [suggestionText, setSuggestionText] = useState('');
+  const [isSendingSuggestion, setIsSendingSuggestion] = useState(false);
+  const [suggestionSuccess, setSuggestionSuccess] = useState(false);
+
   // Estado da foto de perfil com persistência no localStorage
   const [profilePhoto, setProfilePhoto] = useState(() => {
     return localStorage.getItem('lumi-profile-photo') || null;
@@ -34,6 +42,37 @@ export function Profile({ theme = 'dark', onToggleTheme, onNavigate, onLogout })
         localStorage.setItem('lumi-profile-photo', base64Image);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  // Manipulador para limpar o cache local do app preservando a sessão de login
+  const handleClearCache = async () => {
+    if (!window.confirm('Deseja sincronizar e limpar o cache do aplicativo? Todas as novidades do catálogo serão recarregadas.')) {
+      return;
+    }
+
+    try {
+      // Chaves de cache de catálogo e capas
+      const cacheKeys = [
+        'lumi_custom_sections_data',
+        'lumi_custom_category_covers',
+        'lumi_stickers_cache',
+        'lumi_global_announcement'
+      ];
+
+      cacheKeys.forEach(key => localStorage.removeItem(key));
+
+      // Limpa Cache Storage do Service Worker do PWA se disponível
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        await Promise.all(cacheNames.map(name => caches.delete(name)));
+      }
+
+      alert('Cache limpo com sucesso! O aplicativo será recarregado.');
+      window.location.reload();
+    } catch (err) {
+      console.error('Erro ao limpar cache:', err);
+      window.location.reload();
     }
   };
 
@@ -96,22 +135,27 @@ export function Profile({ theme = 'dark', onToggleTheme, onNavigate, onLogout })
       ),
     },
     {
-      id: 'lgpd',
-      label: 'LGPD & Privacidade',
-      onClick: () => setActiveModalDoc(LEGAL_DOCS.lgpd),
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-        </svg>
-      ),
-    },
-    {
       id: 'support',
       label: 'Suporte & Ajuda',
       onClick: () => setActiveModalDoc(LEGAL_DOCS.support),
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+      ),
+    },
+    {
+      id: 'suggestion',
+      label: 'Enviar sugestão ou ideia',
+      onClick: () => {
+        setIsSuggestionModalOpen(true);
+        setSuggestionSuccess(false);
+      },
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EAA1AC" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path>
+          <path d="M9 18h6"></path>
+          <path d="M10 22h4"></path>
         </svg>
       ),
     },
@@ -124,6 +168,16 @@ export function Profile({ theme = 'dark', onToggleTheme, onNavigate, onLogout })
           <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
           <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
           <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+        </svg>
+      ),
+    },
+    {
+      id: 'clear-cache',
+      label: 'Limpar cache & sincronizar',
+      onClick: handleClearCache,
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
         </svg>
       ),
     },
@@ -317,6 +371,189 @@ export function Profile({ theme = 'dark', onToggleTheme, onNavigate, onLogout })
           docData={activeModalDoc}
           onClose={() => setActiveModalDoc(null)}
         />
+      )}
+
+      {/* Modal Flutuante de Sugestão de Ideias e Nichos */}
+      {isSuggestionModalOpen && (
+        <div 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.75)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem'
+          }}
+          onClick={() => setIsSuggestionModalOpen(false)}
+        >
+          <div 
+            style={{
+              background: '#1F151E',
+              border: '1px solid rgba(234,161,172,0.3)',
+              borderRadius: '20px',
+              maxWidth: '440px',
+              width: '100%',
+              padding: '1.5rem',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+              color: '#FFFFFF'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.15rem' }}>Enviar Sugestão</h3>
+              <button 
+                type="button" 
+                onClick={() => setIsSuggestionModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: '#A0909C', fontSize: '1.2rem', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {suggestionSuccess ? (
+              <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
+                <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#B5CE6B', marginBottom: '0.5rem' }}>
+                  Sugestão enviada com sucesso!
+                </div>
+                <p style={{ color: '#A0909C', fontSize: '0.88rem' }}>
+                  Muito obrigado por ajudar a tornar o Lumi App cada vez melhor.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setIsSuggestionModalOpen(false)}
+                  style={{
+                    marginTop: '1rem',
+                    padding: '0.65rem 1.4rem',
+                    background: '#EAA1AC',
+                    border: 'none',
+                    borderRadius: '12px',
+                    color: '#231721',
+                    fontWeight: 'bold',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Concluir
+                </button>
+              </div>
+            ) : (
+              <form 
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!suggestionText.trim()) return;
+                  setIsSendingSuggestion(true);
+                  try {
+                    await sendUserSuggestion({
+                      email: userEmail,
+                      name: userFullName || 'Usuário Lumi',
+                      type: suggestionType,
+                      text: suggestionText
+                    });
+                    setSuggestionSuccess(true);
+                    setSuggestionText('');
+                  } catch (err) {
+                    alert('Erro ao enviar sugestão. Tente novamente.');
+                  } finally {
+                    setIsSendingSuggestion(false);
+                  }
+                }}
+              >
+                <p style={{ color: '#A0909C', fontSize: '0.85rem', marginBottom: '1.2rem' }}>
+                  Qual nicho, figurinha ou melhoria você gostaria de ver no aplicativo?
+                </p>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#EAA1AC', marginBottom: '0.4rem', fontWeight: 'bold' }}>
+                    Tipo da Ideia
+                  </label>
+                  <select
+                    value={suggestionType}
+                    onChange={(e) => setSuggestionType(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      background: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(234,161,172,0.2)',
+                      borderRadius: '12px',
+                      color: '#FFF',
+                      outline: 'none',
+                      fontSize: '0.88rem'
+                    }}
+                  >
+                    <option value="Novo Nicho" style={{ background: '#1F151E' }}>Novo Nicho / Categoria</option>
+                    <option value="Novas Figurinhas" style={{ background: '#1F151E' }}>Novas Figurinhas & Frases</option>
+                    <option value="Melhoria no App" style={{ background: '#1F151E' }}>Melhoria ou Funcionalidade</option>
+                  </select>
+                </div>
+
+                <div style={{ marginBottom: '1.2rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#EAA1AC', marginBottom: '0.4rem', fontWeight: 'bold' }}>
+                    Sua Mensagem
+                  </label>
+                  <textarea
+                    rows={4}
+                    placeholder="Ex: Adoraria figurinhas com frases para Confeitaria ou Dia das Mães..."
+                    value={suggestionText}
+                    onChange={(e) => setSuggestionText(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      background: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(234,161,172,0.2)',
+                      borderRadius: '12px',
+                      color: '#FFF',
+                      outline: 'none',
+                      resize: 'none',
+                      boxSizing: 'border-box',
+                      fontSize: '0.88rem',
+                      fontFamily: 'inherit'
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsSuggestionModalOpen(false)}
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      background: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '12px',
+                      color: '#FFF',
+                      fontWeight: '600',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Cancelar
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={isSendingSuggestion}
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      background: '#EAA1AC',
+                      border: 'none',
+                      borderRadius: '12px',
+                      color: '#231721',
+                      fontWeight: 'bold',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {isSendingSuggestion ? 'Enviando...' : 'Enviar Sugestão'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
