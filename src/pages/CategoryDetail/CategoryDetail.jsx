@@ -219,14 +219,14 @@ export function CategoryDetail({
       <div className="category-quick-filters-scroll">
         {[
           { id: 'all', label: 'Todos' },
-          { id: 'branco', label: '⚪ Branco' },
-          { id: 'preto', label: '⚫ Preto' },
-          { id: 'sombra', label: '🌫️ Sombras' },
-          { id: 'moldura', label: '🖼️ Molduras' },
-          { id: 'minimalista', label: '✨ Minimalista' },
-          { id: 'linha', label: '〰️ Linhas' },
-          { id: 'frase', label: '✍️ Frases' },
-          { id: 'engajamento', label: '🔥 Engajamento' },
+          { id: 'branco', label: 'Branco' },
+          { id: 'preto', label: 'Preto' },
+          { id: 'sombra', label: 'Sombras' },
+          { id: 'moldura', label: 'Molduras' },
+          { id: 'minimalista', label: 'Minimalista' },
+          { id: 'linha', label: 'Linhas' },
+          { id: 'frase', label: 'Frases' },
+          { id: 'engajamento', label: 'Engajamento' },
         ].map((chip) => (
           <button
             key={chip.id}

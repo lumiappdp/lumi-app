@@ -225,7 +225,7 @@ export function CreateSticker({ theme = 'dark', onBack }) {
     });
 
     if (result.success) {
-      setCopyStatus('Salvo em Minhas criações! 💾');
+      setCopyStatus('Salvo em Minhas criações!');
     } else {
       setCopyStatus('Erro ao salvar figurinha.');
     }
@@ -636,7 +636,11 @@ export function CreateSticker({ theme = 'dark', onBack }) {
                       if (!typoHasDragged.current) handleToolClick('sombra');
                     }}
                   >
-                    <span className="tool-btn-icon">☁</span>
+                    <span className="tool-btn-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path>
+                      </svg>
+                    </span>
                     <span className="tool-btn-label">Sombra</span>
                   </button>
 
@@ -647,7 +651,11 @@ export function CreateSticker({ theme = 'dark', onBack }) {
                       if (!typoHasDragged.current) handleToolClick('contorno');
                     }}
                   >
-                    <span className="tool-btn-icon">🔲</span>
+                    <span className="tool-btn-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect width="18" height="18" x="3" y="3" rx="2"></rect>
+                      </svg>
+                    </span>
                     <span className="tool-btn-label">Contorno</span>
                   </button>
 
@@ -658,7 +666,12 @@ export function CreateSticker({ theme = 'dark', onBack }) {
                       if (!typoHasDragged.current) handleToolClick('fundo');
                     }}
                   >
-                    <span className="tool-btn-icon">🏷</span>
+                    <span className="tool-btn-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"></path>
+                        <path d="M7 7h.01"></path>
+                      </svg>
+                    </span>
                     <span className="tool-btn-label">Fundo</span>
                   </button>
 
@@ -669,7 +682,13 @@ export function CreateSticker({ theme = 'dark', onBack }) {
                       if (!typoHasDragged.current) handleToolClick('espaco');
                     }}
                   >
-                    <span className="tool-btn-icon">↔</span>
+                    <span className="tool-btn-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="8 18 2 12 8 6"></polyline>
+                        <polyline points="16 6 22 12 16 18"></polyline>
+                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                      </svg>
+                    </span>
                     <span className="tool-btn-label">Espaço letras</span>
                   </button>
 
@@ -680,7 +699,12 @@ export function CreateSticker({ theme = 'dark', onBack }) {
                       if (!typoHasDragged.current) handleToolClick('opacidade');
                     }}
                   >
-                    <span className="tool-btn-icon">👁</span>
+                    <span className="tool-btn-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </span>
                     <span className="tool-btn-label">Opacidade</span>
                   </button>
 
@@ -691,7 +715,13 @@ export function CreateSticker({ theme = 'dark', onBack }) {
                       if (!typoHasDragged.current) handleToolClick('linhas');
                     }}
                   >
-                    <span className="tool-btn-icon">↕</span>
+                    <span className="tool-btn-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="21" y1="6" x2="3" y2="6"></line>
+                        <line x1="21" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="18" x2="3" y2="18"></line>
+                      </svg>
+                    </span>
                     <span className="tool-btn-label">Espessura linhas</span>
                   </button>
 
