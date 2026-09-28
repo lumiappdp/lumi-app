@@ -5,10 +5,10 @@ import emailjs from '@emailjs/browser';
 // Disparo gratuito e seguro de códigos OTP de recuperação de senha
 // ==================================================
 
-// Variáveis de ambiente configuradas no .env
-const SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || 'service_lumi';
-const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_recovery';
-const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || 'sua_chave_publica_emailjs';
+// Variáveis de ambiente configuradas com chaves públicas seguras e fallback para produção na Vercel
+const SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || 'service_ptwmlqu';
+const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_jxamnll';
+const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || 'CC1CC7Ef7m23a_Zyq';
 
 // Envia e-mail contendo código OTP de 6 dígitos para o usuário redefinir a senha
 // @param {Object} params
