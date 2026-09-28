@@ -22,8 +22,8 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
 
   // Estados do formulário de upload de figurinha
   const [stickerTitle, setStickerTitle] = useState('');
-  const [selectedCategorySlug, setSelectedCategorySlug] = useState('bebida-comida');
-  const [stickerType, setStickerType] = useState('sticker');
+  const [selectedCategorySlug, setSelectedCategorySlug] = useState('elementos');
+  const [stickerType, setStickerType] = useState('element');
   const [tagsInput, setTagsInput] = useState('');
   const [isTrending, setIsTrending] = useState(false);
   const [isPopular, setIsPopular] = useState(false);
@@ -107,8 +107,7 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
 
   // Lista dinâmica de categorias alimentada diretamente pelos nichos reais cadastrados
   const dynamicCategories = [
-    { slug: 'frases', title: 'Frases (Aba Frases)' },
-    { slug: 'elementos', title: 'Elementos (Aba Elementos)' },
+    { slug: 'elementos', title: 'Elementos & Desenhos (Aba Elementos)' },
     ...allSections.map(sec => ({ slug: sec.id, title: sec.title })),
     ...allSections.flatMap(sec => (sec.cards || []).map(c => ({
       slug: (c.tagLabel || c.overlayText || '')
