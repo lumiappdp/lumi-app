@@ -245,12 +245,12 @@ export function getCustomCovers() {
   }
 }
 
-// Obtém as capas salvas diretamente no Supabase para sincronizar em tempo real com todos os celulares
+// Obtém as capas salvas diretamente na tabela 'categories' do Supabase
 export async function getCustomCoversFromSupabase() {
   try {
     const { data, error } = await supabase
-      .from('category_covers')
-      .select('card_id, cover_url');
+      .from('categories')
+      .select('slug, cover_url');
 
     if (error || !data || data.length === 0) {
       return getCustomCovers();
@@ -258,8 +258,8 @@ export async function getCustomCoversFromSupabase() {
 
     const coversMap = {};
     data.forEach((item) => {
-      if (item.card_id && item.cover_url) {
-        coversMap[item.card_id] = item.cover_url;
+      if (item.slug && item.cover_url) {
+        coversMap[item.slug] = item.cover_url;
       }
     });
 
@@ -272,7 +272,7 @@ export async function getCustomCoversFromSupabase() {
   }
 }
 
-// Salva uma nova imagem de capa para um card específico no Storage e no Banco de Dados
+// Salva uma nova imagem de capa para um card/categoria no Storage e no Banco de Dados
 export async function updateCategoryCover(cardId, fileOrUrl) {
   let finalUrl = '';
 
@@ -305,15 +305,12 @@ export async function updateCategoryCover(cardId, fileOrUrl) {
   currentCovers[cardId] = finalUrl;
   localStorage.setItem(LOCAL_COVERS_KEY, JSON.stringify(currentCovers));
 
-  // 2. Sincroniza com o Supabase para que todos os celulares recebam a nova capa
+  // 2. Sincroniza diretamente na tabela 'categories'
   try {
     await supabase
-      .from('category_covers')
-      .upsert({
-        card_id: String(cardId),
-        cover_url: finalUrl,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'card_id' });
+      .from('categories')
+      .update({ cover_url: finalUrl })
+      .eq('slug', String(cardId));
   } catch (err) {
     console.error('Erro ao sincronizar capa no Supabase:', err);
   }
