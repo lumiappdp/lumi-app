@@ -105,21 +105,25 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
     setCategoryFeedback({ type: 'success', message: `Card "${text}" removido com sucesso.` });
   };
 
-  // Lista de categorias e figurinhas cadastradas
-  const [categoriesList, setCategoriesList] = useState([
-    { slug: 'bebida-comida', title: 'Bebida | Comida' },
-    { slug: 'universais', title: 'Universais' },
-    { slug: 'profissoes', title: 'Profissões' },
-    { slug: 'lojas-comercios', title: 'Lojas | Comércios' },
-    { slug: 'datas-comemorativas', title: 'Datas comemorativas' },
-    { slug: 'repost', title: 'Repost' },
-    { slug: 'minimalistas', title: 'Minimalistas' },
-    { slug: 'frases', title: 'Frases' },
-    { slug: 'elementos', title: 'Elementos' },
-  ]);
+  // Lista dinâmica de categorias alimentada diretamente pelos nichos reais cadastrados
+  const dynamicCategories = [
+    { slug: 'frases', title: 'Frases (Aba Frases)' },
+    { slug: 'elementos', title: 'Elementos (Aba Elementos)' },
+    ...allSections.map(sec => ({ slug: sec.id, title: sec.title })),
+    ...allSections.flatMap(sec => (sec.cards || []).map(c => ({
+      slug: (c.tagLabel || c.overlayText || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '-'),
+      title: `${sec.title} → ${c.tagLabel || c.overlayText}`
+    })))
+  ];
+
   const [recentStickers, setRecentStickers] = useState([]);
   const [selectedStickerIds, setSelectedStickerIds] = useState([]);
   const fileInputRef = useRef(null);
+
 
   // Carrega figurinhas cadastradas do Supabase ao montar o componente
   useEffect(() => {
@@ -344,9 +348,10 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
                 onChange={(e) => setSelectedCategorySlug(e.target.value)}
                 className="admin-input-pill"
               >
-                {categoriesList.map(cat => (
+                {dynamicCategories.map(cat => (
                   <option key={cat.slug} value={cat.slug}>{cat.title}</option>
                 ))}
+
               </select>
             </div>
 

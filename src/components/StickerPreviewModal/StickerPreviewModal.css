@@ -1,0 +1,136 @@
+/* Overlay escuro com desfoque de fundo (Glassmorphism iOS) */
+.sticker-preview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  animation: fadeInOverlay 0.22s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Card central do modal com efeito de vidro */
+.sticker-preview-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--glass-card-bg, rgba(43, 29, 40, 0.95));
+  border: 1px solid var(--glass-border, rgba(232, 170, 179, 0.25));
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: scaleUpCard 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Cabeçalho do modal: botões de fechar e favoritar */
+.preview-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.2rem 0.5rem;
+}
+
+.preview-action-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: var(--color-text-primary, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.preview-action-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.preview-action-btn.favorite-btn.favorited {
+  background: rgba(234, 161, 172, 0.2);
+}
+
+/* Área central de exibição ampliada */
+.preview-display-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 230px;
+  padding: 1.5rem 1.25rem;
+}
+
+.preview-content-scalable {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(1.22);
+  transition: transform 0.2s ease;
+}
+
+.preview-img-large {
+  max-width: 170px;
+  max-height: 170px;
+  object-fit: contain;
+}
+
+.preview-svg-wrapper svg {
+  width: 95px;
+  height: 95px;
+}
+
+.preview-bottle {
+  transform: scale(1.15);
+}
+
+/* Rodapé com botão de cópia */
+.preview-footer-actions {
+  padding: 0.8rem 1.2rem 1.25rem;
+}
+
+.preview-copy-btn {
+  width: 100%;
+  height: 48px;
+  background: linear-gradient(135deg, var(--lumi-pink-accent, #D88E99), #E5A4AE);
+  border: none;
+  border-radius: var(--lumi-radius-pill, 9999px);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(216, 142, 153, 0.35);
+  transition: all 0.2s ease;
+}
+
+.preview-copy-btn:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+.preview-copy-btn.success {
+  background: #48BB78;
+  box-shadow: 0 8px 20px rgba(72, 187, 120, 0.35);
+}
+
+/* Animações de entrada */
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleUpCard {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}

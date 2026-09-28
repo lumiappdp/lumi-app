@@ -25,3 +25,8 @@ function ExampleCard({ title, isActive }) {
 ## 3. Diretrizes de Responsividade
 - Design adaptável para Mobile (320px - 480px), Tablet (481px - 1024px) e PC (1025px+).
 - Uso de `clamp()` e unidades relativas (`rem`, `%`, `vh`, `vw`) para escalabilidade em telas diversas.
+
+## 4. Diretriz de Ícones e Elementos Visuais
+- **Nunca utilizar emojis de texto** na interface do usuário (ex: 📲, ✨, 🔥, 🎨, ⭐, 👑).
+- Sempre utilizar **ícones vetoriais SVG** padronizados para complementar informações e manter a estética iOS elegante e profissional.
+

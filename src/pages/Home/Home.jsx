@@ -10,8 +10,10 @@ import { recentService } from '../../services/recentService';
 import { usageService } from '../../services/usageService';
 import { getStickers } from '../../services/stickersService';
 import { checkIsAdmin } from '../../services/authService';
-import { getCustomCovers, updateCategoryCover, getAllSections } from '../../services/categoriesService';
+import { getCustomCovers, getCustomCoversFromSupabase, updateCategoryCover, getAllSections } from '../../services/categoriesService';
+
 import { InstallBanner } from '../../components/InstallBanner/InstallBanner';
+import { StickerPreviewModal } from '../../components/StickerPreviewModal/StickerPreviewModal';
 import { LegalModal } from '../Legal/LegalModal';
 import { LEGAL_DOCS } from '../Legal/legalContent';
 import './Home.css';
@@ -52,6 +54,8 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
   const [toastMessage, setToastMessage] = useState('');
   // Estado para controlar abertura do modal com o tutorial de instalação
   const [activeInstallModal, setActiveInstallModal] = useState(null);
+  // Estado para controlar sticker ativo no modal de visualização ampliada
+  const [selectedStickerForPreview, setSelectedStickerForPreview] = useState(null);
   // IDs favoritados para os stickers mais usados e recentes
   const [favoriteIds, setFavoriteIds] = useState([]);
   // Stickers dinâmicos carregados diretamente do banco Supabase
@@ -99,6 +103,17 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
     const favs = favoritesService.getFavorites();
     setFavoriteIds(favs.map(f => f.id));
 
+    // Busca capas sincronizadas do Supabase
+    async function loadCovers() {
+      try {
+        const covers = await getCustomCoversFromSupabase();
+        setCustomCovers(covers);
+      } catch (err) {
+        console.log('Erro ao carregar capas do Supabase:', err);
+      }
+    }
+    loadCovers();
+
     // Busca figurinhas salvas no Supabase
     async function loadHomeDatabaseStickers() {
       try {
@@ -112,6 +127,7 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
     }
     loadHomeDatabaseStickers();
   }, [activeTab]);
+
 
   // Abre a janela de seleção de arquivos do sistema para alterar a capa do card
   const handleOpenCoverUpload = (e, cardId) => {
@@ -135,7 +151,7 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
         ...prev,
         [editingCardId]: newUrl,
       }));
-      setToastMessage('Capa alterada com sucesso! ✨');
+      setToastMessage('Capa alterada com sucesso!');
     } catch (err) {
       console.error('Erro ao atualizar capa:', err);
       setToastMessage('Erro ao salvar capa. Tente novamente.');
@@ -145,109 +161,26 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
     }
   };
 
-  // Lista de stickers mais usados no Lumi App
-  const mostUsedStickers = [
-    {
-      id: 'mu-1',
-      prefix: 'meu',
-      mainText: 'Drink favorito.',
-      suffix: '♥',
-      styleVariant: 'drink-style',
-    },
-    {
-      id: 'mu-2',
-      isBottle: true,
-      label: 'beba água.',
-    },
-    {
-      id: 'mu-3',
-      prefix: 'meu tipo de',
-      mainText: 'INVESTIMENTO.',
-      suffix: 'comida boa ✔',
-      styleVariant: 'investimento-style',
-    },
-    {
-      id: 'mu-4',
-      mainText: 'Lunch Time.',
-      suffix: 'one • 3',
-      styleVariant: 'lunch-style',
-    },
-    {
-      id: 'mu-5',
-      prefix: 'Pedi',
-      mainText: 'felicidade,',
-      suffix: '♥ VEIO ISSO.',
-      styleVariant: 'felicidade-style',
-    },
-    {
-      id: 'mu-6',
-      prefix: 'hora do',
-      mainText: 'Jantar.',
-      suffix: 'UMA DELÍCIA.',
-      styleVariant: 'jantar-style',
-    },
-    {
-      id: 'mu-7',
-      prefix: 'comer',
-      mainText: 'sem feijão:',
-      suffix: 'CASTIGO DO MONSTRO.',
-      styleVariant: 'feijao-style',
-    },
-    {
-      id: 'mu-8',
-      prefix: 'pizza sem',
-      mainText: 'catchup:',
-      suffix: 'CASTIGO DO MONSTRO.',
-      styleVariant: 'catchup-style',
-    },
-  ];
+  // Figurinhas do banco filtradas para Mais Usados
+  const mostUsedStickers = databaseStickers.map(s => ({
+    id: s.id,
+    mainText: s.title,
+    image_url: s.image_url,
+    label: s.title,
+  }));
 
-  // Lista de stickers em alta 🔥
-  const trendingStickers = [
-    {
-      id: 'tr-1',
-      prefix: 'achei na',
-      mainText: 'shô.',
-      suffix: 'achadinhos ♥',
-      styleVariant: 'feijao-style',
-    },
-    {
-      id: 'tr-2',
-      prefix: 'meu',
-      mainText: 'Drink favorito.',
-      suffix: '♥',
-      styleVariant: 'drink-style',
-    },
-    {
-      id: 'tr-3',
-      isBottle: true,
-      label: 'beba água.',
-    },
-    {
-      id: 'tr-4',
-      prefix: 'a defesa vem',
-      mainText: 'forte.',
-      suffix: '⚖ DIREITO',
-      styleVariant: 'felicidade-style',
-    },
-    {
-      id: 'tr-5',
-      prefix: 'meu tipo de',
-      mainText: 'INVESTIMENTO.',
-      suffix: 'comida boa ✔',
-      styleVariant: 'investimento-style',
-    },
-    {
-      id: 'tr-6',
-      prefix: 'nova',
-      mainText: 'COLEÇÃO.',
-      suffix: '✦ novidades',
-      styleVariant: 'investimento-style',
-    },
-  ];
+  // Figurinhas em alta cadastradas no Supabase
+  const trendingStickers = databaseStickers
+    .filter(s => s.is_trending)
+    .map(s => ({
+      id: s.id,
+      mainText: s.title,
+      image_url: s.image_url,
+      label: s.title,
+    }));
 
-  // Figurinhas do banco filtradas por tipo ou categoria
-  const dbPhrases = databaseStickers
+  // Figurinhas de frases cadastradas no Supabase
+  const phrasesStickers = databaseStickers
     .filter(s => s.type === 'phrase' || s.category_slug === 'frases')
     .map(s => ({
       id: s.id,
@@ -256,168 +189,23 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
       label: s.title,
     }));
 
-  // Lista exclusivamente de frases para Stories (combina banco + locais)
-  const phrasesStickers = [
-    ...dbPhrases,
-    {
-      id: 'ph-1',
-      prefix: 'menos é',
-      mainText: 'mais.',
-      suffix: '✦ estética clean',
-      styleVariant: 'drink-style',
-    },
-    {
-      id: 'ph-2',
-      prefix: 'Pedi',
-      mainText: 'felicidade,',
-      suffix: '♥ VEIO ISSO.',
-      styleVariant: 'felicidade-style',
-    },
-    {
-      id: 'ph-3',
-      prefix: 'detalhes que',
-      mainText: 'ENCANTAM.',
-      suffix: 'nosso cantinho',
-      styleVariant: 'investimento-style',
-    },
-    {
-      id: 'ph-4',
-      prefix: 'simplicidade &',
-      mainText: 'essência.',
-      suffix: 'viver bem',
-      styleVariant: 'drink-style',
-    },
-    {
-      id: 'ph-5',
-      prefix: 'comer',
-      mainText: 'sem feijão:',
-      suffix: 'CASTIGO DO MONSTRO.',
-      styleVariant: 'feijao-style',
-    },
-    {
-      id: 'ph-6',
-      prefix: 'pizza sem',
-      mainText: 'catchup:',
-      suffix: 'CASTIGO DO MONSTRO.',
-      styleVariant: 'catchup-style',
-    },
-    {
-      id: 'ph-7',
-      prefix: 'hora do',
-      mainText: 'Jantar.',
-      suffix: 'UMA DELÍCIA.',
-      styleVariant: 'jantar-style',
-    },
-    {
-      id: 'ph-8',
-      prefix: 'meu tipo de',
-      mainText: 'INVESTIMENTO.',
-      suffix: 'comida boa ✔',
-      styleVariant: 'investimento-style',
-    },
-  ];
+  // Figurinhas de elementos e desenhos cadastrados no Supabase
+  const elementsStickers = databaseStickers
+    .filter(s => s.type === 'element' || s.category_slug === 'elementos')
+    .map(s => ({
+      id: s.id,
+      label: s.title,
+      isElement: true,
+      image_url: s.image_url,
+      render: (
+        <img 
+          src={s.image_url} 
+          alt={s.title} 
+          style={{ maxWidth: '68px', maxHeight: '68px', objectFit: 'contain' }} 
+        />
+      ),
+    }));
 
-  // Lista exclusivamente de elementos gráficos, ilustrações e desenhos
-  const elementsStickers = [
-    {
-      id: 'el-1',
-      label: 'Hambúrguer',
-      render: (
-        <svg width="68" height="68" viewBox="0 0 100 100" fill="none">
-          <path d="M15 45 C15 15, 85 15, 85 45 Z" fill="#E5984A" stroke="#FFFFFF" strokeWidth="2.5" />
-          <circle cx="35" cy="30" r="2" fill="#FFF2D6" />
-          <circle cx="50" cy="24" r="2" fill="#FFF2D6" />
-          <circle cx="65" cy="32" r="2" fill="#FFF2D6" />
-          <polygon points="12 46, 88 46, 50 62" fill="#FFC83B" />
-          <rect x="14" y="52" width="72" height="14" rx="7" fill="#6E3A20" stroke="#FFFFFF" strokeWidth="2" />
-          <path d="M10 66 C20 70, 30 64, 40 68 C50 72, 60 64, 70 68 C80 72, 90 66, 90 66" stroke="#48BB78" strokeWidth="6" strokeLinecap="round" />
-          <rect x="18" y="72" width="64" height="15" rx="7" fill="#E5984A" stroke="#FFFFFF" strokeWidth="2.5" />
-        </svg>
-      )
-    },
-    {
-      id: 'el-2',
-      label: 'Batata Frita',
-      render: (
-        <svg width="68" height="68" viewBox="0 0 100 100" fill="none">
-          <rect x="30" y="10" width="8" height="40" rx="3" fill="#F6E05E" />
-          <rect x="42" y="6" width="8" height="45" rx="3" fill="#ECC94B" />
-          <rect x="54" y="12" width="8" height="40" rx="3" fill="#F6E05E" />
-          <rect x="66" y="18" width="8" height="35" rx="3" fill="#ECC94B" />
-          <path d="M22 45 L30 92 C32 96, 68 96, 70 92 L78 45 Z" fill="#E53E3E" stroke="#FFFFFF" strokeWidth="3" />
-          <circle cx="50" cy="68" r="11" fill="#F6E05E" />
-          <path d="M45 68 Q50 74 55 68" stroke="#744210" strokeWidth="2" fill="none" strokeLinecap="round" />
-          <circle cx="46" cy="64" r="1.5" fill="#744210" />
-          <circle cx="54" cy="64" r="1.5" fill="#744210" />
-        </svg>
-      )
-    },
-    {
-      id: 'el-3',
-      label: 'Cerejas',
-      render: (
-        <svg width="68" height="68" viewBox="0 0 100 100" fill="none">
-          <path d="M45 25 C45 10, 70 12, 75 28 C60 32, 45 25, 45 25 Z" fill="#48BB78" stroke="#FFFFFF" strokeWidth="1.5" />
-          <path d="M50 25 Q38 45 32 60" stroke="#38A169" strokeWidth="3" fill="none" strokeLinecap="round" />
-          <path d="M50 25 Q62 45 68 62" stroke="#38A169" strokeWidth="3" fill="none" strokeLinecap="round" />
-          <circle cx="32" cy="68" r="16" fill="#E53E3E" stroke="#FFFFFF" strokeWidth="2.5" />
-          <circle cx="28" cy="62" r="4" fill="#FEB2B2" />
-          <circle cx="68" cy="70" r="16" fill="#C53030" stroke="#FFFFFF" strokeWidth="2.5" />
-          <circle cx="64" cy="64" r="4" fill="#FEB2B2" />
-        </svg>
-      )
-    },
-    {
-      id: 'el-4',
-      label: 'Nuvem e Raio',
-      render: (
-        <svg width="68" height="68" viewBox="0 0 100 100" fill="none">
-          <path d="M25 60 C15 60, 10 50, 18 40 C15 30, 28 20, 40 25 C48 15, 68 15, 75 25 C85 25, 92 35, 88 45 C95 52, 90 60, 80 60 Z" fill="#FFFFFF" />
-          <polygon points="50 56, 42 74, 52 74, 46 92, 64 68, 54 68" fill="#F6E05E" stroke="#D69E2E" strokeWidth="1.5" />
-        </svg>
-      )
-    },
-    {
-      id: 'el-5',
-      label: 'Balão Mensagem',
-      render: (
-        <svg width="74" height="54" viewBox="0 0 100 70" fill="none">
-          <path d="M10 5 C10 2, 20 0, 30 0 L80 0 C90 0, 100 2, 100 15 L100 45 C100 55, 90 58, 80 58 L30 58 L12 70 L18 58 L10 58 C2 58, 0 50, 0 40 L0 15 C0 5, 5 5, 10 5 Z" fill="#FFFFFF" />
-        </svg>
-      )
-    },
-    {
-      id: 'el-6',
-      label: 'Avião',
-      render: (
-        <svg width="68" height="68" viewBox="0 0 100 100" fill="none">
-          <path d="M50 15 L58 45 L90 60 L90 68 L58 60 L58 80 L68 88 L68 94 L50 90 L32 94 L32 88 L42 80 L42 60 L10 68 L10 60 L42 45 Z" fill="#E2E8F0" stroke="#3182CE" strokeWidth="4" strokeLinejoin="round" />
-        </svg>
-      )
-    },
-    {
-      id: 'el-7',
-      label: 'Nuvem de Sonho',
-      render: (
-        <svg width="68" height="68" viewBox="0 0 100 100" fill="none">
-          <circle cx="28" cy="82" r="5" fill="#FFFFFF" />
-          <circle cx="38" cy="70" r="7" fill="#FFFFFF" />
-          <path d="M38 52 C28 52, 22 42, 30 32 C26 22, 38 12, 50 16 C58 8, 76 8, 82 18 C92 18, 98 28, 94 38 C100 45, 96 52, 88 52 Z" fill="#FFFFFF" />
-        </svg>
-      )
-    },
-    {
-      id: 'el-8',
-      label: 'Brilhos Mágicos',
-      render: (
-        <svg width="68" height="68" viewBox="0 0 100 100" fill="none">
-          <path d="M50 10 Q50 50 10 50 Q50 50 50 90 Q50 50 90 50 Q50 50 50 10 Z" fill="#FFD700" />
-          <circle cx="78" cy="22" r="6" fill="#FFF275" />
-          <circle cx="22" cy="78" r="4" fill="#FFF275" />
-        </svg>
-      )
-    }
-  ];
 
   // Copia um sticker mais usado para os Stories e adiciona aos recentes e contabiliza uso
   const handleCopyMostUsedSticker = async (item, event) => {
@@ -526,7 +314,7 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
     },
     {
       id: 'em-alta',
-      label: 'Em alta 🔥',
+      label: 'Em alta',
       icon: (
         <svg className="pill-svg-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
@@ -689,10 +477,10 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
                 <div
                   key={item.id}
                   className="sticker-card"
-                  onClick={(e) => handleCopyMostUsedSticker(item, e)}
+                  onClick={() => setSelectedStickerForPreview(item)}
                   role="button"
                   tabIndex="0"
-                  aria-label={`Copiar sticker: ${item.mainText || item.label}`}
+                  aria-label={`Visualizar sticker: ${item.mainText || item.label}`}
                 >
                   {/* Topo do Card: Botão de Favoritar */}
                   <div className="card-top-actions" style={{ justifyContent: 'flex-end' }}>
@@ -754,10 +542,10 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
                   <div
                     key={item.id}
                     className="sticker-card"
-                    onClick={(e) => handleCopyRecentSticker(item, e)}
+                    onClick={() => setSelectedStickerForPreview(item)}
                     role="button"
                     tabIndex="0"
-                    aria-label={`Copiar sticker: ${item.mainText || item.label}`}
+                    aria-label={`Visualizar sticker: ${item.mainText || item.label}`}
                   >
                     {/* Topo do Card: Botão de Favoritar */}
                     <div className="card-top-actions" style={{ justifyContent: 'flex-end' }}>
@@ -803,7 +591,7 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
         ) : activeTab === 'em-alta' ? (
           <section className="content-section">
             <div className="section-header">
-              <h2 className="section-title">Em alta no momento 🔥</h2>
+              <h2 className="section-title">Em alta no momento</h2>
             </div>
 
             <div className="cards-grid">
@@ -816,10 +604,10 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
                 <div
                   key={item.id}
                   className="sticker-card"
-                  onClick={(e) => handleCopyRecentSticker(item, e)}
+                  onClick={() => setSelectedStickerForPreview(item)}
                   role="button"
                   tabIndex="0"
-                  aria-label={`Copiar sticker: ${item.mainText || item.label}`}
+                  aria-label={`Visualizar sticker: ${item.mainText || item.label}`}
                 >
                   {/* Topo do Card: Botão de Favoritar */}
                   <div className="card-top-actions" style={{ justifyContent: 'flex-end' }}>
@@ -865,7 +653,7 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
         ) : activeTab === 'frases' ? (
           <section className="content-section">
             <div className="section-header">
-              <h2 className="section-title">Frases para Stories ✨</h2>
+              <h2 className="section-title">Frases para Stories</h2>
             </div>
 
             <div className="cards-grid">
@@ -878,10 +666,10 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
                 <div
                   key={item.id}
                   className="sticker-card"
-                  onClick={(e) => handleCopyRecentSticker(item, e)}
+                  onClick={() => setSelectedStickerForPreview(item)}
                   role="button"
                   tabIndex="0"
-                  aria-label={`Copiar frase: ${item.mainText}`}
+                  aria-label={`Visualizar frase: ${item.mainText}`}
                 >
                   {/* Topo do Card: Botão de Favoritar */}
                   <div className="card-top-actions" style={{ justifyContent: 'flex-end' }}>
@@ -924,7 +712,7 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
         ) : activeTab === 'elementos' ? (
           <section className="content-section">
             <div className="section-header">
-              <h2 className="section-title">Elementos & Desenhos 🎨</h2>
+              <h2 className="section-title">Elementos & Desenhos</h2>
             </div>
 
             <div className="cards-grid">
@@ -937,10 +725,10 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
                 <div
                   key={item.id}
                   className="sticker-card"
-                  onClick={(e) => handleCopyRecentSticker({ id: item.id, label: item.label, isElement: true }, e)}
+                  onClick={() => setSelectedStickerForPreview({ id: item.id, label: item.label, render: item.render, isElement: true })}
                   role="button"
                   tabIndex="0"
-                  aria-label={`Copiar elemento: ${item.label}`}
+                  aria-label={`Visualizar elemento: ${item.label}`}
                 >
                   {/* Topo do Card: Botão de Favoritar */}
                   <div className="card-top-actions" style={{ justifyContent: 'flex-end' }}>
@@ -987,10 +775,10 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
                   <div 
                     key={creation.id} 
                     className="feed-card creation-card" 
-                    onClick={() => handleCopyCreation(creation)}
+                    onClick={() => setSelectedStickerForPreview({ id: creation.id, title: creation.title, imageData: creation.imageData })}
                     role="button"
                     tabIndex="0"
-                    aria-label={`Copiar ${creation.title}`}
+                    aria-label={`Visualizar ${creation.title}`}
                     style={{ 
                       background: 'rgba(58, 53, 58, 0.7)', 
                       backdropFilter: 'blur(10px)',
@@ -1152,6 +940,23 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
         <LegalModal 
           doc={activeInstallModal} 
           onClose={() => setActiveInstallModal(null)} 
+        />
+      )}
+
+      {/* Modal de Pré-visualização Ampliada do Sticker */}
+      {selectedStickerForPreview && (
+        <StickerPreviewModal
+          sticker={selectedStickerForPreview}
+          theme={theme}
+          isFavorited={favoriteIds.includes(selectedStickerForPreview.id)}
+          onToggleFavorite={handleToggleFavorite}
+          onClose={() => setSelectedStickerForPreview(null)}
+          onAfterCopy={() => {
+            if (activeTab === 'recentes') {
+              setRecentStickers(recentService.getRecents());
+            }
+            setUsageCounts(usageService.getUsageCounts());
+          }}
         />
       )}
     </div>

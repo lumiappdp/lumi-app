@@ -80,7 +80,12 @@ export function InstallBanner({ onOpenGuide }) {
   return (
     <div className="install-pwa-banner">
       <div className="install-pwa-left">
-        <span className="install-pwa-icon">📲</span>
+        <span className="install-pwa-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+          </svg>
+        </span>
         <div className="install-pwa-text">
           <strong className="install-pwa-title">Instalar o Lumi App</strong>
           <span className="install-pwa-sub">

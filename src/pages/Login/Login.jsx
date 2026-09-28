@@ -2,7 +2,8 @@ import { useState } from 'react';
 // Importação das logos originais da identidade visual do Lumi App
 import logoLight from '../../../identidade-visual/lumi-logo-icone-ve.png';
 import logoDark from '../../../identidade-visual/lumi-logo-icone-ve (2).png';
-import { loginUser, checkIsAdmin } from '../../services/authService';
+import { loginUser, checkIsAdmin, checkPaymentStatus } from '../../services/authService';
+
 import './Login.css';
 
 // Componente principal da Tela de Login do Lumi App

@@ -101,7 +101,7 @@ export function PaymentCheckout({ theme = 'dark', userData, onPaymentConfirmed, 
           />
         </div>
 
-        <h1 className="payment-title">Quase lá! ✨</h1>
+        <h1 className="payment-title">Quase lá!</h1>
         <p className="payment-subtitle">
           Finalize o pagamento seguro para liberar seu acesso instantâneo ao Lumi.
         </p>
@@ -110,7 +110,7 @@ export function PaymentCheckout({ theme = 'dark', userData, onPaymentConfirmed, 
         <div className="plan-summary-card">
           <div className="plan-summary-header">
             <span className="summary-label">Plano Selecionado</span>
-            <span className="summary-badge">{isAnnual ? 'Melhor Oferta ⭐' : 'Flexível'}</span>
+            <span className="summary-badge">{isAnnual ? 'Melhor Oferta' : 'Flexível'}</span>
           </div>
           <div className="summary-main">
             <h2 className="summary-plan-name">{planTitle}</h2>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import lumiHeartIcon from '../../../identidade-visual/9.png';
 import { clipboardService } from '../../services/clipboardService';
 import { favoritesService } from '../../services/favoritesService';
+import { StickerPreviewModal } from '../../components/StickerPreviewModal/StickerPreviewModal';
 import './Favorites.css';
 
 // Componente da Página de Favoritos - Lumi App
@@ -14,6 +15,8 @@ export function Favorites({ theme = 'dark', onNavigate }) {
   const [favoritesList, setFavoritesList] = useState([]);
   // Feedback de cópia
   const [copyStatus, setCopyStatus] = useState({ id: null, message: '', isSuccess: true });
+  // Estado para controlar sticker ativo no modal de visualização ampliada
+  const [selectedStickerForPreview, setSelectedStickerForPreview] = useState(null);
 
   // Carrega os stickers favoritados do localStorage
   useEffect(() => {
@@ -23,7 +26,7 @@ export function Favorites({ theme = 'dark', onNavigate }) {
 
   // Copia o sticker para o clipboard do sistema
   const handleCopySticker = async (item, event) => {
-    const cardElement = event.currentTarget.querySelector('.sticker-content-center') || event.currentTarget;
+    const cardElement = event?.currentTarget?.querySelector('.sticker-content-center') || event?.currentTarget;
 
     setCopyStatus({ id: item.id, message: 'Copiando...', isSuccess: true });
 
@@ -42,7 +45,7 @@ export function Favorites({ theme = 'dark', onNavigate }) {
 
   // Desfavorita o sticker da lista
   const handleRemoveFavorite = (item, e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     const updated = favoritesService.toggleFavorite(item);
     setFavoritesList(updated);
   };
@@ -81,8 +84,8 @@ export function Favorites({ theme = 'dark', onNavigate }) {
                 className={`sticker-card ${copyStatus.id === item.id ? 'copying' : ''}`} 
                 tabIndex="0" 
                 role="button" 
-                onClick={(e) => handleCopySticker(item, e)}
-                aria-label={`Copiar sticker: ${item.mainText || item.label}`}
+                onClick={() => setSelectedStickerForPreview(item)}
+                aria-label={`Visualizar sticker: ${item.mainText || item.label}`}
               >
                 {/* Topo do Card: Botão de Desfavoritar */}
                 <div className="card-top-actions" style={{ justifyContent: 'flex-end' }}>
@@ -168,6 +171,20 @@ export function Favorites({ theme = 'dark', onNavigate }) {
           </svg>
         </button>
       </nav>
+
+      {/* Modal de Pré-visualização Ampliada do Sticker */}
+      {selectedStickerForPreview && (
+        <StickerPreviewModal
+          sticker={selectedStickerForPreview}
+          theme={theme}
+          isFavorited={favoritesList.some(fav => fav.id === selectedStickerForPreview.id)}
+          onToggleFavorite={(stk) => {
+            handleRemoveFavorite(stk);
+            setSelectedStickerForPreview(null);
+          }}
+          onClose={() => setSelectedStickerForPreview(null)}
+        />
+      )}
     </div>
   );
 }

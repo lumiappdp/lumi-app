@@ -28,7 +28,7 @@ export function Register({ theme = 'dark', onRegisterSuccess, onBackToLogin }) {
     {
       id: 'annual',
       title: 'Plano Anual',
-      tag: 'Mais vantajoso ⭐',
+      tag: 'Mais vantajoso',
       price: 'R$ 89,90',
       period: '/ano (equivale a R$ 7,49/mês)',
       description: 'Acesso total a todos os packs, fontes exclusivas e atualizações semanais.',

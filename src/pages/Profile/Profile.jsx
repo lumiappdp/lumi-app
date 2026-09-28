@@ -51,7 +51,7 @@ export function Profile({ theme = 'dark', onToggleTheme, onNavigate, onLogout })
   const menuItems = [
     ...(isSuperAdmin ? [{
       id: 'admin',
-      label: 'Painel do Administrador 👑',
+      label: 'Painel do Administrador',
       onClick: () => onNavigate && onNavigate('admin'),
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EAA1AC" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -61,7 +61,7 @@ export function Profile({ theme = 'dark', onToggleTheme, onNavigate, onLogout })
     }] : []),
     {
       id: 'install-guide',
-      label: 'Como instalar no celular 📲',
+      label: 'Como instalar no celular',
       onClick: () => setActiveModalDoc(LEGAL_DOCS.install),
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EAA1AC" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -144,10 +144,12 @@ export function Profile({ theme = 'dark', onToggleTheme, onNavigate, onLogout })
       label: 'Apagar conta',
       isDanger: true,
       onClick: async () => {
-        if (isAdmin) {
+        // Validação de segurança para o Administrador Supremo
+        if (isSuperAdmin) {
           alert('A conta do Administrador Supremo não pode ser excluída.');
           return;
         }
+
 
         const confirmed = window.confirm(
           'Atenção: Tem certeza de que deseja apagar sua conta? Todos os seus dados, favoritos e acesso serão permanentemente excluídos.'

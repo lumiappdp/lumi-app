@@ -1,5 +1,7 @@
 import { supabase } from './supabaseClient';
 
+
+
 // Serviço de Autenticação com Supabase
 // Fornece funções para Login, Cadastro com Plano, Logout e Verificação de Permissões de Administrador
 
@@ -123,8 +125,36 @@ export async function updatePasswordUser(newPassword) {
   return data;
 }
 
-// Exclui a conta do usuário e limpa seus registros (Conformidade LGPD)
-// @param {string} email
+// Redefine a senha do usuário após validação com código OTP enviado por e-mail
+// Utiliza a função RPC segura com SECURITY DEFINER criada diretamente no banco Supabase
+// @param {Object} params
+// @param {string} params.email - E-mail cadastrado
+// @param {string} params.newPassword - Nova senha definida
+// @returns {Promise<Object>}
+export async function resetPasswordWithOtpVerified({ email, newPassword }) {
+  // Normaliza o endereço de e-mail removendo espaços e passando para minúsculas
+  const cleanEmail = email.trim().toLowerCase();
+
+  // Executa a função RPC direta no PostgreSQL do Supabase através do cliente público
+  const { data, error } = await supabase.rpc('update_user_password', {
+    user_email: cleanEmail,
+    new_password: newPassword,
+  });
+
+  if (error) {
+    console.error('Erro na RPC update_user_password:', error);
+    throw new Error(error.message || 'Não foi possível atualizar a senha no banco de dados.');
+  }
+
+  return { success: true, data };
+}
+
+
+
+
+// Exclui a conta do usuário e limpa todos os seus registros (Conformidade LGPD)
+// Utiliza a função RPC segura com SECURITY DEFINER no PostgreSQL do Supabase
+// @param {string} email - E-mail do usuário que deseja apagar a conta
 // @returns {Promise<boolean>}
 export async function deleteAccountUser(email) {
   if (!email) return false;
@@ -137,13 +167,17 @@ export async function deleteAccountUser(email) {
   const cleanEmail = email.trim().toLowerCase();
 
   try {
-    // Remove registros do perfil na tabela profiles
-    await supabase
-      .from('profiles')
-      .delete()
-      .eq('email', cleanEmail);
+    // Executa a exclusão de todos os registros na base de dados via RPC
+    const { error } = await supabase.rpc('delete_user_account', {
+      user_email: cleanEmail,
+    });
 
-    // Efetua logout da sessão
+    if (error) {
+      console.error('Erro na RPC delete_user_account:', error);
+      throw new Error(error.message || 'Falha ao excluir registros no banco de dados.');
+    }
+
+    // Efetua logout da sessão atual
     await supabase.auth.signOut();
     return true;
   } catch (err) {
@@ -151,6 +185,7 @@ export async function deleteAccountUser(email) {
     throw err;
   }
 }
+
 
 // Obtém os dados do perfil do usuário logado e verifica se é Admin
 export async function getCurrentUserProfile() {

@@ -5,6 +5,7 @@ import { favoritesService } from '../../services/favoritesService';
 import { recentService } from '../../services/recentService';
 import { usageService } from '../../services/usageService';
 import { getStickers } from '../../services/stickersService';
+import { StickerPreviewModal } from '../../components/StickerPreviewModal/StickerPreviewModal';
 import './CategoryDetail.css';
 
 // Componente da Página de Detalhes da Categoria / Nicho (ex: Bebida | Comida)
@@ -28,6 +29,8 @@ export function CategoryDetail({
   const [favoriteIds, setFavoriteIds] = useState([]);
   // Lista de stickers dinâmicos carregados do Supabase
   const [supabaseStickers, setSupabaseStickers] = useState([]);
+  // Estado para controlar sticker ativo no modal de visualização ampliada
+  const [selectedStickerForPreview, setSelectedStickerForPreview] = useState(null);
 
   // Carrega os favoritos e figurinhas do banco na montagem do componente
   useEffect(() => {
@@ -64,7 +67,7 @@ export function CategoryDetail({
   // Manipulador de cópia do sticker para a área de transferência
   const handleCopySticker = async (item, event) => {
     // Identifica o elemento do card clicado para rasterização com transparência
-    const cardElement = event.currentTarget.querySelector('.sticker-content-center') || event.currentTarget;
+    const cardElement = event?.currentTarget?.querySelector('.sticker-content-center') || event?.currentTarget;
 
     // Feedback imediato de carregamento
     setCopyStatus({ id: item.id, message: 'Copiando...', isSuccess: true });
@@ -79,7 +82,7 @@ export function CategoryDetail({
         ]);
         recentService.addRecent({ id: item.id, title: item.title, image_url: item.image_url, mainText: item.title });
         usageService.recordUsage(item);
-        setCopyStatus({ id: item.id, message: 'Copiado para o Story! ✨', isSuccess: true });
+        setCopyStatus({ id: item.id, message: 'Copiado para o Story!', isSuccess: true });
         setTimeout(() => setCopyStatus({ id: null, message: '', isSuccess: true }), 2200);
         return;
       } catch (err) {
@@ -107,90 +110,17 @@ export function CategoryDetail({
     }, 2500);
   };
 
-  // Lista de artes tipográficas com estrutura visual fiel ao print de referência
-  const stickers = [
-    {
-      id: 1,
-      prefix: 'meu',
-      mainText: 'Drink favorito.',
-      suffix: '♥',
-      styleVariant: 'drink-style',
-      hasColorBadge: true,
-      isPremium: true,
-    },
-    {
-      id: 2,
-      prefix: 'meu tipo de',
-      mainText: 'INVESTIMENTO.',
-      suffix: 'comida boa ✔',
-      styleVariant: 'investimento-style',
-      hasColorBadge: true,
-      isPremium: true,
-    },
-    {
-      id: 3,
-      prefix: 'Pedi',
-      mainText: 'felicidade,',
-      suffix: '♥ VEIO ISSO.',
-      styleVariant: 'felicidade-style',
-      hasColorBadge: true,
-      isPremium: true,
-    },
-    {
-      id: 4,
-      isBottle: true,
-      label: 'beba água.',
-      hasColorBadge: false,
-      isPremium: true,
-    },
-    {
-      id: 5,
-      prefix: 'comer',
-      mainText: 'sem feijão:',
-      suffix: 'CASTIGO DO MONSTRO.',
-      styleVariant: 'feijao-style',
-      hasColorBadge: true,
-      isPremium: true,
-    },
-    {
-      id: 6,
-      prefix: 'hora do',
-      mainText: 'Jantar.',
-      suffix: 'UMA DELÍCIA.',
-      styleVariant: 'jantar-style',
-      hasColorBadge: true,
-      isPremium: true,
-    },
-    {
-      id: 7,
-      mainText: 'Lunch Time.',
-      suffix: 'one • 3',
-      styleVariant: 'lunch-style',
-      hasColorBadge: true,
-      isPremium: true,
-    },
-    {
-      id: 8,
-      prefix: 'pizza sem',
-      mainText: 'catchup:',
-      suffix: 'CASTIGO DO MONSTRO.',
-      styleVariant: 'catchup-style',
-      hasColorBadge: true,
-      isPremium: true,
-    },
-  ];
+  // Exibe exclusivamente os stickers reais cadastrados no Supabase para esta categoria
+  const allCategoryStickers = supabaseStickers.map((stk) => ({
+    id: stk.id,
+    mainText: stk.title,
+    label: stk.title,
+    title: stk.title,
+    image_url: stk.image_url,
+    hasColorBadge: false,
+    isPremium: true,
+  }));
 
-  // Combina stickers locais com os que vêm do Supabase
-  const allCategoryStickers = [
-    ...supabaseStickers.map(stk => ({
-      id: stk.id,
-      mainText: stk.title,
-      label: stk.title,
-      image_url: stk.image_url,
-      hasColorBadge: false,
-    })),
-    ...stickers,
-  ];
 
   // Filtra stickers em tempo real com base no termo digitado
   const filteredStickers = allCategoryStickers.filter((item) => {
@@ -285,8 +215,8 @@ export function CategoryDetail({
               className={`sticker-card ${copyStatus.id === item.id ? 'copying' : ''}`} 
               tabIndex="0" 
               role="button" 
-              onClick={(e) => handleCopySticker(item, e)}
-              aria-label={`Copiar sticker: ${item.mainText || item.label}`}
+              onClick={() => setSelectedStickerForPreview(item)}
+              aria-label={`Visualizar sticker: ${item.mainText || item.label}`}
             >
             {/* Topo do Card: Botão de Favoritar */}
             <div className="card-top-actions" style={{ justifyContent: 'flex-end' }}>
@@ -339,6 +269,17 @@ export function CategoryDetail({
           </div>
         )))}
       </main>
+
+      {/* Modal de Pré-visualização Ampliada do Sticker */}
+      {selectedStickerForPreview && (
+        <StickerPreviewModal
+          sticker={selectedStickerForPreview}
+          theme={theme}
+          isFavorited={favoriteIds.includes(selectedStickerForPreview.id)}
+          onToggleFavorite={handleToggleFavorite}
+          onClose={() => setSelectedStickerForPreview(null)}
+        />
+      )}
     </div>
   );
 }

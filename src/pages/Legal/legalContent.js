@@ -68,7 +68,7 @@ export const LEGAL_DOCS = {
   },
   support: {
     title: 'Suporte & Ajuda',
-    subtitle: 'Estamos aqui para te ajudar a criar Stories incríveis ✨',
+    subtitle: 'Estamos aqui para te ajudar a criar Stories incríveis',
     sections: [
       {
         heading: '1. Como copiar figurinhas para o Instagram Stories?',
@@ -95,31 +95,38 @@ Horário de atendimento: Segunda a Sexta, das 09h às 18h.`,
     ],
   },
   install: {
-    title: 'Como Instalar no Celular 📲',
-    subtitle: 'Tenha o Lumi App na sua tela inicial como um aplicativo nativo',
+    title: 'Como Instalar no Celular',
+    subtitle: 'Tenha o Lumi App direto na sua tela inicial como um aplicativo nativo',
     sections: [
       {
-        heading: '🍎 No iPhone / iPad (Safari)',
-        content: `1. Abra o link do Lumi App no navegador Safari.
-2. Toque no botão de Compartilhar (o ícone de quadrado com uma seta apontando para cima na barra inferior).
-3. Role as opções para baixo e toque em "Adicionar à Tela de Início" (+).
-4. Toque em "Adicionar" no canto superior direito.
-Pronto! O ícone do Lumi App ficará salvo na sua tela inicial e abrirá em tela cheia sem barras de navegador.`,
+        heading: 'No iPhone / iPad (Apple iOS - Safari)',
+        content: `Siga o passo a passo abaixo no navegador Safari:
+
+1. Abra o Lumi App no navegador Safari do seu iPhone ou iPad.
+2. Na barra inferior da tela, toque no botão de Compartilhar (o ícone de um quadrado com uma seta para cima).
+3. Role as opções que aparecem para baixo e toque em "Adicionar à Tela de Início" (ícone com um +).
+4. No canto superior direito, confirme tocando em "Adicionar".
+
+Pronto! O ícone oficial do Lumi App aparecerá na tela inicial do seu iPhone e abrirá em tela cheia, exatamente como um aplicativo da App Store, sem barras de navegador!`,
       },
       {
-        heading: '🤖 No Android (Google Chrome)',
-        content: `1. Abra o link do Lumi App no navegador Google Chrome.
-2. Toque nos 3 pontinhos no canto superior direito da tela.
+        heading: 'No Android (Google Chrome & Samsung Internet)',
+        content: `Siga o passo a passo abaixo no navegador do seu celular Android:
+
+1. Abra o Lumi App no Google Chrome ou no navegador Samsung Internet.
+2. Toque no menu de 3 pontinhos (no canto superior direito da tela).
 3. Selecione a opção "Instalar aplicativo" ou "Adicionar à tela inicial".
-4. Toque em "Instalar" para confirmar.
-Pronto! O aplicativo será adicionado aos seus apps e você poderá acessá-lo com 1 toque.`,
+4. Toque no botão "Instalar" para confirmar a criação do aplicativo.
+
+Pronto! O aplicativo do Lumi será instalado no seu aparelho com ícone próprio e abrirá de forma instantânea em tela cheia!`,
       },
       {
-        heading: '✨ Vantagens do App Instalado',
-        content: `• Abertura instantânea sem precisar digitar o link no navegador.
-• Experiência 100% em tela cheia com visual moderno.
-• Acesso super rápido para copiar figurinhas e colar nos seus Stories a qualquer hora!`,
+        heading: 'Por que instalar o Lumi App?',
+        content: `• Acesso em 1 toque: Você não precisa digitar o endereço no navegador toda vez que quiser criar Stories.
+• Modo Tela Cheia: O app ocupa 100% da tela do seu celular com velocidade máxima e sem distrações.
+• Copiar e Colar super rápido: Alterne entre o Lumi App e o Instagram para criar publicações profissionais em segundos!`,
       },
     ],
   },
 };
+
