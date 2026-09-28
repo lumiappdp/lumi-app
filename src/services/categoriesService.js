@@ -37,7 +37,7 @@ export async function getSectionsFromSupabase() {
       .select('*')
       .order('display_order', { ascending: true });
 
-    if (!error && data && data.length > 0) {
+    if (!error && Array.isArray(data)) {
       // Mapeia categorias do Supabase em estrutura de seções
       const mapped = data.map(cat => ({
         id: cat.slug || cat.id,
@@ -50,11 +50,9 @@ export async function getSectionsFromSupabase() {
         }] : [])
       }));
 
-      // Se encontrou dados válidos no Supabase, salva no cache
-      if (mapped.length > 0) {
-        saveAllSections(mapped);
-        return mapped;
-      }
+      // Sincroniza com o cache local (mesmo se estiver vazio [])
+      saveAllSections(mapped);
+      return mapped;
     }
   } catch (err) {
     console.log('Utilizando cache local de seções:', err);
