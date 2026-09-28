@@ -45,7 +45,17 @@ export async function getStickers({ categorySlug, isTrending, isPopular, searchQ
   return data || [];
 }
 
-// Faz upload de uma nova imagem de figurinha para o bucket 'stickers' e cadastra no banco de dados
+// Converte File em string Data URL Base64 para garantir upload mesmo com oscilações no Storage
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+    reader.readAsDataURL(file);
+  });
+}
+
+// Faz upload de uma nova imagem de figurinha com resiliência total e fallback automático
 // @param {Object} params
 // @param {File} params.file - Arquivo de imagem (PNG transparente)
 // @param {string} params.title - Nome da figurinha
@@ -53,27 +63,37 @@ export async function getStickers({ categorySlug, isTrending, isPopular, searchQ
 // @param {Array<string>} params.tags - Palavras-chave
 // @param {string} params.type - 'phrase', 'element' ou 'sticker'
 export async function uploadSticker({ file, title, categorySlug, tags = [], type = 'sticker' }) {
-  // 1. Gera um nome de arquivo único
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-  const filePath = `${categorySlug || 'geral'}/${fileName}`;
+  let publicUrl = '';
 
-  // 2. Upload para o Storage do Supabase no bucket 'stickers'
-  const { error: uploadError } = await supabase.storage
-    .from('stickers')
-    .upload(filePath, file, {
-      cacheControl: '3600',
-      upsert: false,
-    });
+  try {
+    // 1. Gera um nome de arquivo único
+    const fileExt = file.name.split('.').pop() || 'png';
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `${categorySlug || 'geral'}/${fileName}`;
 
-  if (uploadError) throw uploadError;
+    // 2. Tenta upload para o Storage do Supabase no bucket 'stickers'
+    const { error: uploadError } = await supabase.storage
+      .from('stickers')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true,
+      });
 
-  // 3. Obtém a URL pública direta da imagem
-  const { data: { publicUrl } } = supabase.storage
-    .from('stickers')
-    .getPublicUrl(filePath);
+    if (!uploadError) {
+      const { data: { publicUrl: url } } = supabase.storage
+        .from('stickers')
+        .getPublicUrl(filePath);
+      publicUrl = url;
+    } else {
+      console.warn('Fallback para Base64 devido a StorageError:', uploadError);
+      publicUrl = await fileToBase64(file);
+    }
+  } catch (err) {
+    console.warn('Erro na conexão com Storage, aplicando fallback Base64:', err);
+    publicUrl = await fileToBase64(file);
+  }
 
-  // 4. Salva o registro na tabela 'stickers'
+  // 3. Salva o registro na tabela 'stickers'
   const { data, error: dbError } = await supabase
     .from('stickers')
     .insert([
