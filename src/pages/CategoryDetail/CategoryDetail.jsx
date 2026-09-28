@@ -37,24 +37,16 @@ export function CategoryDetail({
     const list = favoritesService.getFavorites();
     setFavoriteIds(list.map((item) => item.id));
 
-    // Carrega figurinhas adicionais do Supabase para esta categoria ou subpasta
+    // Carrega figurinhas adicionais do Supabase para esta categoria
     async function loadDynamicStickers() {
       try {
-        const cleanTitle = categoryTitle.trim();
-        const slug = cleanTitle
+        const slug = categoryTitle
           .toLowerCase()
           .normalize('NFD')
           .replace(/[\u0300-\u036f]/g, '')
           .replace(/[^a-z0-9]/g, '-');
 
-        // Busca figurinhas vinculadas ao slug exato da subpasta/nicho
-        let data = await getStickers({ categorySlug: slug });
-        
-        // Se não encontrar pelo slug direto, busca por correspondência de título ou tag
-        if (!data || data.length === 0) {
-          data = await getStickers({ searchQuery: cleanTitle });
-        }
-
+        const data = await getStickers({ categorySlug: slug });
         if (data && data.length > 0) {
           setSupabaseStickers(data);
         } else {

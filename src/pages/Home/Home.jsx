@@ -915,10 +915,10 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
                       key={card.id} 
                       className="feed-card horizontal-feed-card" 
                       style={{ backgroundImage: `url(${currentBg})` }}
-                      onClick={() => onSelectCategory && onSelectCategory(card.tagLabel || card.overlayText || sec.title)}
+                      onClick={() => onSelectCategory && onSelectCategory(card.tagLabel || sec.title)}
                       role="button"
                       tabIndex="0"
-                      aria-label={`Ver artes de ${card.tagLabel || card.overlayText || sec.title}`}
+                      aria-label={`Ver artes de ${card.tagLabel || sec.title}`}
                     >
                       {/* Botão de Edição de Capa visível exclusivamente para o Admin Supremo */}
                       {isAdmin && (
