@@ -29,6 +29,39 @@ export function getAllSections() {
   return DEFAULT_SECTIONS;
 }
 
+// Obtém as seções e subcards sincronizados diretamente do Supabase
+export async function getSectionsFromSupabase() {
+  try {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('display_order', { ascending: true });
+
+    if (!error && data && data.length > 0) {
+      // Mapeia categorias do Supabase em estrutura de seções
+      const mapped = data.map(cat => ({
+        id: cat.slug || cat.id,
+        title: cat.name || cat.title,
+        cards: Array.isArray(cat.cards) ? cat.cards : (cat.cover_url ? [{
+          id: `card-${cat.id}`,
+          overlayText: cat.name || cat.title,
+          tagLabel: cat.name || cat.title,
+          bgImage: cat.cover_url
+        }] : [])
+      }));
+
+      // Se encontrou dados válidos no Supabase, salva no cache
+      if (mapped.length > 0) {
+        saveAllSections(mapped);
+        return mapped;
+      }
+    }
+  } catch (err) {
+    console.log('Utilizando cache local de seções:', err);
+  }
+  return getAllSections();
+}
+
 // Salva a lista completa de seções
 export function saveAllSections(sections) {
   try {
@@ -38,7 +71,7 @@ export function saveAllSections(sections) {
   }
 }
 
-// Cria um novo nicho / categoria principal
+// Cria um novo nicho / categoria principal e sincroniza com o Supabase
 // @param {string} title - Nome do nicho (ex: "Maternidade")
 // @returns {Object} Novo objeto de seção
 export async function createNicheSection(title) {
@@ -65,14 +98,34 @@ export async function createNicheSection(title) {
 
   const updatedSections = [...currentSections, newSection];
   saveAllSections(updatedSections);
+
+  // Sincroniza com o Supabase para que todos os celulares recebam
+  try {
+    await supabase.from('categories').upsert({
+      slug: slug,
+      name: cleanTitle,
+      display_order: updatedSections.length,
+      cards: []
+    }, { onConflict: 'slug' });
+  } catch (err) {
+    console.warn('Erro ao salvar categoria no Supabase:', err);
+  }
+
   return newSection;
 }
 
 // Exclui um nicho inteiro
-export function deleteNicheSection(sectionId) {
+export async function deleteNicheSection(sectionId) {
   const currentSections = getAllSections();
   const filtered = currentSections.filter(s => s.id !== sectionId);
   saveAllSections(filtered);
+
+  try {
+    await supabase.from('categories').delete().eq('slug', sectionId);
+  } catch (err) {
+    console.warn('Erro ao excluir categoria do Supabase:', err);
+  }
+
   return filtered;
 }
 
@@ -126,6 +179,22 @@ export async function addSubcardToSection(sectionId, { overlayText, tagLabel, fi
   });
 
   saveAllSections(updatedSections);
+
+  // Sincroniza os subcards no Supabase
+  try {
+    const targetSec = updatedSections.find(s => s.id === sectionId);
+    if (targetSec) {
+      await supabase.from('categories').upsert({
+        slug: targetSec.id,
+        name: targetSec.title,
+        cards: targetSec.cards,
+        cover_url: targetSec.cards[0]?.bgImage || null
+      }, { onConflict: 'slug' });
+    }
+  } catch (err) {
+    console.warn('Erro ao atualizar cards no Supabase:', err);
+  }
+
   return newCard;
 }
 

@@ -10,7 +10,13 @@ import { recentService } from '../../services/recentService';
 import { usageService } from '../../services/usageService';
 import { getStickers } from '../../services/stickersService';
 import { checkIsAdmin } from '../../services/authService';
-import { getCustomCovers, getCustomCoversFromSupabase, updateCategoryCover, getAllSections } from '../../services/categoriesService';
+import { 
+  getCustomCovers, 
+  getCustomCoversFromSupabase, 
+  updateCategoryCover, 
+  getAllSections,
+  getSectionsFromSupabase 
+} from '../../services/categoriesService';
 
 import { InstallBanner } from '../../components/InstallBanner/InstallBanner';
 import { StickerPreviewModal } from '../../components/StickerPreviewModal/StickerPreviewModal';
@@ -32,6 +38,8 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
 
   // Estado para armazenar o mapa de capas personalizadas dos cards
   const [customCovers, setCustomCovers] = useState(() => getCustomCovers());
+  // Estado para armazenar as seções e subcards dinâmicos reais cadastrados no Supabase
+  const [sections, setSections] = useState(() => getAllSections());
   // Referência do input de arquivo oculto para upload de capa pelo Admin
   const fileInputRef = useRef(null);
   // Estado para guardar qual ID de card está sendo editado no momento
@@ -92,7 +100,7 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
     filtersScrollRef.current.scrollLeft = scrollLeftState - walk;
   };
 
-  // Carrega favoritos, recentes, criações salvas e figurinhas do banco
+  // Carrega favoritos, recentes, criações salvas, seções e figurinhas do banco
   useEffect(() => {
     if (activeTab === 'eu-criei') {
       setMyCreations(creationsService.getCreations());
@@ -102,6 +110,19 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
     }
     const favs = favoritesService.getFavorites();
     setFavoriteIds(favs.map(f => f.id));
+
+    // Busca seções e subcards dinâmicos sincronizados do Supabase
+    async function loadDynamicSections() {
+      try {
+        const data = await getSectionsFromSupabase();
+        if (data) {
+          setSections(data);
+        }
+      } catch (err) {
+        console.log('Erro ao carregar seções do Supabase:', err);
+      }
+    }
+    loadDynamicSections();
 
     // Busca capas sincronizadas do Supabase
     async function loadCovers() {
@@ -342,9 +363,6 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
       )
     }
   ];
-
-  // Dados das seções de conteúdo do Lumi App (carregados dinamicamente)
-  const sections = getAllSections();
 
   // Filtro de busca inteligente para os stickers das abas
   const searchNormalized = searchTerm.toLowerCase().trim();
