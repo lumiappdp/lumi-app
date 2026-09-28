@@ -93,14 +93,39 @@ export async function uploadSticker({ file, title, categorySlug, tags = [], type
     publicUrl = await fileToBase64(file);
   }
 
-  // 3. Salva o registro na tabela 'stickers'
+  // 3. Garante que a categoria selecionada exista na tabela 'categories' (evita erro de foreign key)
+  const safeCategorySlug = categorySlug || 'geral';
+  try {
+    const { data: catExists } = await supabase
+      .from('categories')
+      .select('slug')
+      .eq('slug', safeCategorySlug)
+      .maybeSingle();
+
+    if (!catExists) {
+      // Cria a categoria automaticamente no banco se for um nicho novo
+      const categoryTitle = safeCategorySlug
+        .split('-')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+
+      await supabase.from('categories').insert({
+        slug: safeCategorySlug,
+        title: categoryTitle,
+      });
+    }
+  } catch (catErr) {
+    console.warn('Verificação de categoria:', catErr);
+  }
+
+  // 4. Salva o registro na tabela 'stickers'
   const { data, error: dbError } = await supabase
     .from('stickers')
     .insert([
       {
         title,
         image_url: publicUrl,
-        category_slug: categorySlug,
+        category_slug: safeCategorySlug,
         tags,
         type,
       },
