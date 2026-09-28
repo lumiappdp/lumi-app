@@ -84,7 +84,14 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
   const loadSections = async () => {
     try {
       const data = await getSectionsFromSupabase();
-      if (data) setAllSections(data);
+      if (data && data.length > 0) {
+        setAllSections(data);
+        // Garante que o select do formulário de subcard aponte para um nicho real existente
+        setTargetNicheId(prev => {
+          const exists = data.some(s => s.id === prev);
+          return exists ? prev : data[0].id;
+        });
+      }
       const covers = await getCustomCoversFromSupabase();
       if (covers) setCustomCovers(covers);
     } catch (err) {

@@ -288,6 +288,24 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
     setFavoriteIds(updated.map((fav) => fav.id));
   };
 
+  // Referência do input de arquivo oculto para importação de figurinhas do usuário
+  const userStickerInputRef = useRef(null);
+
+  // Manipulador para importar figurinhas da galeria do celular
+  const handleImportUserSticker = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setToastMessage('Importando figurinha...');
+    for (const file of files) {
+      await creationsService.importUserSticker(file);
+    }
+    setMyCreations(creationsService.getCreations());
+    setToastMessage(`${files.length > 1 ? 'Figurinhas salvas' : 'Figurinha salva'} na sua galeria!`);
+    setTimeout(() => setToastMessage(''), 2500);
+    if (e.target) e.target.value = '';
+  };
+
   // Copia a criação do usuário para os Stories
   const handleCopyCreation = async (item) => {
     setToastMessage('Copiando...');
@@ -362,6 +380,17 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
           <circle cx="12" cy="12" r="10"></circle>
           <path d="M8 12h8"></path>
           <path d="M12 8v8"></path>
+        </svg>
+      )
+    },
+    {
+      id: 'eu-criei',
+      label: 'Minha Galeria',
+      icon: (
+        <svg className="pill-svg-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
         </svg>
       )
     }
@@ -819,16 +848,87 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
           </section>
         ) : activeTab === 'eu-criei' ? (
           <section className="content-section">
-            <div className="section-header">
-              <h2 className="section-title">Minhas criações</h2>
+            <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 className="section-title">Minha Galeria de Figurinhas</h2>
+              
+              {/* Botão de Importar Figurinha do Celular */}
+              <button
+                type="button"
+                className="import-user-sticker-btn"
+                onClick={() => userStickerInputRef.current && userStickerInputRef.current.click()}
+                style={{
+                  background: 'linear-gradient(135deg, #EAA1AC 0%, #D48995 100%)',
+                  color: '#231721',
+                  border: 'none',
+                  borderRadius: '12px',
+                  padding: '0.45rem 0.85rem',
+                  fontSize: '0.8rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  boxShadow: '0 4px 12px rgba(234, 161, 172, 0.35)'
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                + Subir Figurinha
+              </button>
             </div>
 
+            {/* Input de Arquivo Oculto para Selecionar Imagens do Celular */}
+            <input
+              type="file"
+              ref={userStickerInputRef}
+              accept="image/*"
+              multiple
+              style={{ display: 'none' }}
+              onChange={handleImportUserSticker}
+            />
+
             {myCreations.length === 0 ? (
-              <div className="home-no-results">
-                <p>Você ainda não salvou nenhuma figurinha.</p>
-                <p style={{ fontSize: '0.85rem', marginTop: '0.4rem', opacity: 0.7 }}>
-                  Toque no botão <strong>+</strong> para criar sua primeira figurinha!
+              <div className="home-no-results" style={{ padding: '2.5rem 1rem', textAlign: 'center' }}>
+                <div style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '50%',
+                  background: 'rgba(234, 161, 172, 0.12)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 1rem auto',
+                  color: '#EAA1AC'
+                }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                </div>
+                <h3 style={{ fontSize: '1.05rem', color: '#FFFFFF', marginBottom: '0.35rem' }}>Sua Galeria está vazia</h3>
+                <p style={{ fontSize: '0.85rem', color: '#A0909C', maxWidth: '280px', margin: '0 auto 1.2rem auto' }}>
+                  Suba suas figurinhas PNG transparentes para não perder na galeria e copie direto para o Instagram!
                 </p>
+                <button
+                  type="button"
+                  onClick={() => userStickerInputRef.current && userStickerInputRef.current.click()}
+                  style={{
+                    background: 'rgba(234, 161, 172, 0.15)',
+                    border: '1px solid #EAA1AC',
+                    color: '#EAA1AC',
+                    padding: '0.6rem 1.2rem',
+                    borderRadius: '9999px',
+                    fontSize: '0.85rem',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Importar do Celular
+                </button>
               </div>
             ) : (
               <div className="cards-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
@@ -847,7 +947,9 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
                       alignItems: 'center', 
                       justifyContent: 'center',
                       position: 'relative',
-                      minHeight: '170px'
+                      minHeight: '170px',
+                      borderRadius: '16px',
+                      cursor: 'pointer'
                     }}
                   >
                     {/* Botão de Excluir */}
@@ -876,7 +978,7 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
                       ✕
                     </button>
 
-                    {/* Imagem transparente da criação */}
+                    {/* Imagem transparente da criação / importada */}
                     <img 
                       src={creation.imageData} 
                       alt={creation.title} 

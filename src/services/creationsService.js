@@ -106,6 +106,47 @@ export const creationsService = {
     const creations = this.getCreations().filter(c => c.id !== id);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(creations));
   },
+
+  // Importa uma figurinha transparente do rolo da câmera/galeria do usuário
+  // @param {File} file - Arquivo de imagem selecionado pelo usuário
+  // @param {string} [title] - Título opcional da figurinha
+  // @returns {Promise<{ success: boolean, item?: Object, error?: any }>}
+  async importUserSticker(file, title = 'Minha Figurinha Importada') {
+    return new Promise((resolve) => {
+      try {
+        if (!file) {
+          resolve({ success: false, error: 'Nenhum arquivo fornecido.' });
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const imageData = e.target.result;
+          const creations = this.getCreations();
+
+          const newCreation = {
+            id: `imported_${Date.now()}`,
+            title: title || file.name.replace(/\.[^/.]+$/, "") || 'Figurinha Importada',
+            imageData: imageData,
+            createdAt: new Date().toISOString(),
+            isImported: true
+          };
+
+          creations.unshift(newCreation);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(creations));
+          resolve({ success: true, item: newCreation });
+        };
+
+        reader.onerror = (err) => {
+          resolve({ success: false, error: err });
+        };
+
+        reader.readAsDataURL(file);
+      } catch (err) {
+        resolve({ success: false, error: err });
+      }
+    });
+  }
 };
 
 export default creationsService;

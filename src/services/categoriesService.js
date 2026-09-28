@@ -31,6 +31,7 @@ export function getAllSections() {
 
 // Obtém as seções e subcards sincronizados diretamente do Supabase
 export async function getSectionsFromSupabase() {
+  const localSections = getAllSections();
   try {
     const { data, error } = await supabase
       .from('categories')
@@ -41,7 +42,7 @@ export async function getSectionsFromSupabase() {
       // Mapeia categorias do Supabase garantindo a integridade dos subcards
       const mapped = data.map(cat => {
         let parsedCards = [];
-        if (Array.isArray(cat.cards)) {
+        if (Array.isArray(cat.cards) && cat.cards.length > 0) {
           parsedCards = cat.cards;
         } else if (typeof cat.cards === 'string') {
           try {
@@ -51,11 +52,29 @@ export async function getSectionsFromSupabase() {
           }
         }
 
+        // Se o Supabase não tiver cards em coluna, resgata do cache local onde o admin salvou
+        const localMatch = localSections.find(s => 
+          String(s.id) === String(cat.slug || cat.id) || 
+          s.title?.toLowerCase() === (cat.name || cat.title)?.toLowerCase()
+        );
+
+        if (parsedCards.length === 0 && localMatch && Array.isArray(localMatch.cards) && localMatch.cards.length > 0) {
+          parsedCards = localMatch.cards;
+        }
+
         return {
           id: cat.slug || cat.id,
           title: cat.name || cat.title,
           cards: parsedCards
         };
+      });
+
+      // Inclui também seções criadas localmente que ainda não desceram do Supabase
+      localSections.forEach(localSec => {
+        const alreadyInMapped = mapped.some(m => String(m.id) === String(localSec.id) || m.title?.toLowerCase() === localSec.title?.toLowerCase());
+        if (!alreadyInMapped) {
+          mapped.push(localSec);
+        }
       });
 
       // Sincroniza com o cache local
@@ -65,7 +84,7 @@ export async function getSectionsFromSupabase() {
   } catch (err) {
     console.log('Utilizando cache local de seções:', err);
   }
-  return getAllSections();
+  return localSections;
 }
 
 // Salva a lista completa de seções
@@ -246,14 +265,14 @@ export async function addSubcardToSection(sectionId, { overlayText, tagLabel, fi
       finalBg = fileOrUrl;
     } else if (fileOrUrl instanceof File) {
       try {
-        const fileExt = fileOrUrl.name.split('.').pop() || 'png';
-        const fileName = `covers/subcard_${Date.now()}.${fileExt}`;
+        const fileExt = fileOrUrl.name.split('.').pop()?.toLowerCase() || 'png';
+        const cleanFileName = `covers/subcard_${Date.now()}.${fileExt}`;
         const { data, error } = await supabase.storage
           .from('stickers')
-          .upload(fileName, fileOrUrl, { cacheControl: '3600', upsert: true });
+          .upload(cleanFileName, fileOrUrl, { cacheControl: '3600', upsert: true });
 
         if (!error && data) {
-          const { data: pub } = supabase.storage.from('stickers').getPublicUrl(fileName);
+          const { data: pub } = supabase.storage.from('stickers').getPublicUrl(cleanFileName);
           finalBg = pub.publicUrl;
         } else {
           finalBg = await fileToBase64(fileOrUrl);
@@ -264,6 +283,7 @@ export async function addSubcardToSection(sectionId, { overlayText, tagLabel, fi
     }
   }
 
+  // Novo subcard com frase no centro e etiqueta específica no rodapé
   const newCard = {
     id: `card-${Date.now()}`,
     overlayText: overlayText.trim(),
@@ -273,7 +293,9 @@ export async function addSubcardToSection(sectionId, { overlayText, tagLabel, fi
 
   const currentSections = getAllSections();
   const updatedSections = currentSections.map(sec => {
-    if (sec.id === sectionId) {
+    const isTarget = String(sec.id) === String(sectionId) || 
+                     (sec.slug && String(sec.slug) === String(sectionId));
+    if (isTarget) {
       return {
         ...sec,
         cards: [...(sec.cards || []), newCard],
@@ -282,21 +304,43 @@ export async function addSubcardToSection(sectionId, { overlayText, tagLabel, fi
     return sec;
   });
 
+  // Salva no armazenamento local primeiro (garantia de funcionamento imediato na interface)
   saveAllSections(updatedSections);
 
-  // Sincroniza a lista completa de subcards e a capa da categoria no Supabase
+  // Sincroniza a capa da categoria no Supabase
   try {
-    const targetSec = updatedSections.find(s => s.id === sectionId);
+    const targetSec = updatedSections.find(s => 
+      String(s.id) === String(sectionId) || (s.slug && String(s.slug) === String(sectionId))
+    );
+
     if (targetSec) {
-      await supabase.from('categories').upsert({
-        slug: targetSec.id,
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetSec.id);
+      
+      const payload = {
         title: targetSec.title,
-        cards: targetSec.cards,
-        cover_url: targetSec.cards[0]?.bgImage || null
-      }, { onConflict: 'slug' });
+        cover_url: targetSec.cards[0]?.bgImage || null,
+      };
+
+      // Tenta atualizar registro existente
+      let updateQuery = supabase.from('categories').update(payload);
+      if (isUuid) {
+        updateQuery = updateQuery.eq('id', targetSec.id);
+      } else {
+        updateQuery = updateQuery.eq('slug', targetSec.id);
+      }
+      
+      const { error: updateErr } = await updateQuery;
+
+      if (updateErr) {
+        await supabase.from('categories').upsert({
+          slug: targetSec.id,
+          title: targetSec.title,
+          cover_url: targetSec.cards[0]?.bgImage || null
+        }, { onConflict: 'slug' });
+      }
     }
   } catch (err) {
-    console.warn('Erro ao atualizar cards no Supabase:', err);
+    console.warn('Sincronização de categoria com Supabase:', err);
   }
 
   return newCard;
@@ -306,7 +350,9 @@ export async function addSubcardToSection(sectionId, { overlayText, tagLabel, fi
 export async function deleteSubcardFromSection(sectionId, cardId) {
   const currentSections = getAllSections();
   const updatedSections = currentSections.map(sec => {
-    if (sec.id === sectionId) {
+    const isTarget = String(sec.id) === String(sectionId) || 
+                     (sec.slug && String(sec.slug) === String(sectionId));
+    if (isTarget) {
       return {
         ...sec,
         cards: (sec.cards || []).filter(c => String(c.id) !== String(cardId)),
@@ -318,14 +364,19 @@ export async function deleteSubcardFromSection(sectionId, cardId) {
   saveAllSections(updatedSections);
 
   try {
-    const targetSec = updatedSections.find(s => s.id === sectionId);
+    const targetSec = updatedSections.find(s => 
+      String(s.id) === String(sectionId) || (s.slug && String(s.slug) === String(sectionId))
+    );
     if (targetSec) {
-      await supabase.from('categories').upsert({
-        slug: targetSec.id,
-        name: targetSec.title,
-        cards: targetSec.cards,
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetSec.id);
+      const payload = {
         cover_url: targetSec.cards[0]?.bgImage || null
-      }, { onConflict: 'slug' });
+      };
+      if (isUuid) {
+        await supabase.from('categories').update(payload).eq('id', targetSec.id);
+      } else {
+        await supabase.from('categories').update(payload).eq('slug', targetSec.id);
+      }
     }
   } catch (err) {
     console.warn('Erro ao atualizar subcards no Supabase após remoção:', err);
