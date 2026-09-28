@@ -114,14 +114,18 @@ export async function createNicheSection(title) {
   return newSection;
 }
 
-// Exclui um nicho inteiro
+// Exclui um nicho inteiro no banco e localmente
 export async function deleteNicheSection(sectionId) {
   const currentSections = getAllSections();
   const filtered = currentSections.filter(s => s.id !== sectionId);
   saveAllSections(filtered);
 
   try {
-    await supabase.from('categories').delete().eq('slug', sectionId);
+    // Tenta deletar por slug ou por id no Supabase
+    await supabase
+      .from('categories')
+      .delete()
+      .or(`slug.eq.${sectionId},id.eq.${sectionId}`);
   } catch (err) {
     console.warn('Erro ao excluir categoria do Supabase:', err);
   }
@@ -198,20 +202,35 @@ export async function addSubcardToSection(sectionId, { overlayText, tagLabel, fi
   return newCard;
 }
 
-// Exclui um subcard de uma seção
-export function deleteSubcardFromSection(sectionId, cardId) {
+// Exclui um subcard de uma seção no banco e localmente
+export async function deleteSubcardFromSection(sectionId, cardId) {
   const currentSections = getAllSections();
   const updatedSections = currentSections.map(sec => {
     if (sec.id === sectionId) {
       return {
         ...sec,
-        cards: sec.cards.filter(c => String(c.id) !== String(cardId)),
+        cards: (sec.cards || []).filter(c => String(c.id) !== String(cardId)),
       };
     }
     return sec;
   });
 
   saveAllSections(updatedSections);
+
+  try {
+    const targetSec = updatedSections.find(s => s.id === sectionId);
+    if (targetSec) {
+      await supabase.from('categories').upsert({
+        slug: targetSec.id,
+        name: targetSec.title,
+        cards: targetSec.cards,
+        cover_url: targetSec.cards[0]?.bgImage || null
+      }, { onConflict: 'slug' });
+    }
+  } catch (err) {
+    console.warn('Erro ao atualizar subcards no Supabase após remoção:', err);
+  }
+
   return updatedSections;
 }
 

@@ -2,11 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { uploadSticker, getStickers } from '../../services/stickersService';
 import { 
   getAllSections, 
+  getSectionsFromSupabase,
   createNicheSection, 
   deleteNicheSection, 
   addSubcardToSection, 
   deleteSubcardFromSection, 
-  getCustomCovers 
+  getCustomCovers,
+  getCustomCoversFromSupabase
 } from '../../services/categoriesService';
 import { supabase } from '../../services/supabaseClient';
 import './AdminDashboard.css';
@@ -36,12 +38,30 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
   const [allSections, setAllSections] = useState(() => getAllSections());
   const [customCovers, setCustomCovers] = useState(() => getCustomCovers());
   const [newNicheTitle, setNewNicheTitle] = useState('');
-  const [targetNicheId, setTargetNicheId] = useState(() => allSections[0]?.id || 'universais');
+  const [targetNicheId, setTargetNicheId] = useState(() => allSections[0]?.id || 'elementos');
   const [subcardOverlayText, setSubcardOverlayText] = useState('');
   const [subcardTagLabel, setSubcardTagLabel] = useState('');
   const [subcardImageFile, setSubcardImageFile] = useState(null);
   const [subcardPreviewUrl, setSubcardPreviewUrl] = useState('');
   const [categoryFeedback, setCategoryFeedback] = useState(null);
+
+  // Carrega seções sincronizadas diretamente do Supabase
+  const loadSections = async () => {
+    try {
+      const data = await getSectionsFromSupabase();
+      if (data) setAllSections(data);
+      const covers = await getCustomCoversFromSupabase();
+      if (covers) setCustomCovers(covers);
+    } catch (err) {
+      console.warn('Erro ao carregar seções no Admin:', err);
+    }
+  };
+
+  // Carrega seções e figurinhas ao montar o painel
+  useEffect(() => {
+    loadSections();
+    loadStickers();
+  }, []);
 
   // Manipulador para criar novo Nicho
   const handleCreateNicheSubmit = async (e) => {
@@ -51,8 +71,7 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
     setCategoryFeedback(null);
     try {
       await createNicheSection(newNicheTitle);
-      const updated = getAllSections();
-      setAllSections(updated);
+      await loadSections();
       setNewNicheTitle('');
       setCategoryFeedback({ type: 'success', message: `Nicho "${newNicheTitle}" criado com sucesso!` });
     } catch (err) {
@@ -61,11 +80,16 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
   };
 
   // Manipulador para excluir Nicho
-  const handleDeleteNiche = (sectionId, title) => {
+  const handleDeleteNiche = async (sectionId, title) => {
     if (!window.confirm(`Tem certeza de que deseja excluir o nicho "${title}" e todos os seus subcards?`)) return;
-    const updated = deleteNicheSection(sectionId);
-    setAllSections(updated);
-    setCategoryFeedback({ type: 'success', message: `Nicho "${title}" removido com sucesso.` });
+    try {
+      const updated = await deleteNicheSection(sectionId);
+      setAllSections(updated);
+      setCategoryFeedback({ type: 'success', message: `Nicho "${title}" removido com sucesso.` });
+      await loadSections();
+    } catch (err) {
+      setCategoryFeedback({ type: 'error', message: err.message || 'Erro ao excluir nicho.' });
+    }
   };
 
   // Manipulador para adicionar Subcard
@@ -82,9 +106,7 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
         fileOrUrl: subcardImageFile,
       });
 
-      const updated = getAllSections();
-      setAllSections(updated);
-      setCustomCovers(getCustomCovers());
+      await loadSections();
       setSubcardOverlayText('');
       setSubcardTagLabel('');
       setSubcardImageFile(null);
@@ -98,11 +120,16 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
   };
 
   // Manipulador para excluir Subcard
-  const handleDeleteSubcard = (sectionId, cardId, text) => {
+  const handleDeleteSubcard = async (sectionId, cardId, text) => {
     if (!window.confirm(`Deseja remover o card "${text}"?`)) return;
-    const updated = deleteSubcardFromSection(sectionId, cardId);
-    setAllSections(updated);
-    setCategoryFeedback({ type: 'success', message: `Card "${text}" removido com sucesso.` });
+    try {
+      const updated = await deleteSubcardFromSection(sectionId, cardId);
+      setAllSections(updated);
+      setCategoryFeedback({ type: 'success', message: `Card "${text}" removido com sucesso.` });
+      await loadSections();
+    } catch (err) {
+      setCategoryFeedback({ type: 'error', message: err.message || 'Erro ao remover card.' });
+    }
   };
 
   // Lista dinâmica de categorias alimentada diretamente pelos nichos reais cadastrados
@@ -122,12 +149,6 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
   const [recentStickers, setRecentStickers] = useState([]);
   const [selectedStickerIds, setSelectedStickerIds] = useState([]);
   const fileInputRef = useRef(null);
-
-
-  // Carrega figurinhas cadastradas do Supabase ao montar o componente
-  useEffect(() => {
-    loadStickers();
-  }, []);
 
   // Busca lista de figurinhas recentes do banco
   const loadStickers = async () => {
