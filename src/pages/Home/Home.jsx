@@ -54,9 +54,9 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
   const [searchTerm, setSearchTerm] = useState('');
 
   // Estado com as criações salvas pelo usuário
-  const [myCreations, setMyCreations] = useState([]);
+  const [myCreations, setMyCreations] = useState(() => creationsService.getCreations() || []);
   // Estado com os stickers usados recentemente
-  const [recentStickers, setRecentStickers] = useState([]);
+  const [recentStickers, setRecentStickers] = useState(() => recentService.getRecents() || []);
   // Estado com mapa de contagem de cliques/usos para a aba Mais Usados
   const [usageCounts, setUsageCounts] = useState(() => usageService.getUsageCounts());
   const [toastMessage, setToastMessage] = useState('');
