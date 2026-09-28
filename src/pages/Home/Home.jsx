@@ -386,16 +386,20 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
   const filteredPhrases = phrasesStickers.filter(filterStickerItem);
   const filteredElements = elementsStickers.filter(filterStickerItem);
 
-  // Filtra as seções e os cards correspondentes em tempo real
-  const filteredSections = sections.map((sec) => {
-    if (!searchNormalized) return sec;
-    const matchingCards = sec.cards.filter((card) => 
-      card.overlayText.toLowerCase().includes(searchNormalized) ||
-      (card.tagLabel && card.tagLabel.toLowerCase().includes(searchNormalized))
-    );
-    const isSectionMatch = sec.title.toLowerCase().includes(searchNormalized);
-    return isSectionMatch ? sec : { ...sec, cards: matchingCards };
-  }).filter((sec) => sec.cards.length > 0);
+  // Filtra as seções e os cards correspondentes em tempo real com proteção de array
+  const safeSections = Array.isArray(sections) ? sections : [];
+  const filteredSections = safeSections
+    .map((sec) => {
+      const cards = Array.isArray(sec.cards) ? sec.cards : [];
+      if (!searchNormalized) return { ...sec, cards };
+      const matchingCards = cards.filter((card) => 
+        (card.overlayText || '').toLowerCase().includes(searchNormalized) ||
+        (card.tagLabel && card.tagLabel.toLowerCase().includes(searchNormalized))
+      );
+      const isSectionMatch = (sec.title || '').toLowerCase().includes(searchNormalized);
+      return isSectionMatch ? { ...sec, cards } : { ...sec, cards: matchingCards };
+    })
+    .filter((sec) => sec.cards && sec.cards.length > 0);
 
   return (
     <div className={`home-container ${theme}`} data-theme={theme}>
