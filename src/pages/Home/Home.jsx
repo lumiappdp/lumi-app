@@ -182,8 +182,11 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
     }
   };
 
+  // Garante que databaseStickers seja sempre um array iterável
+  const safeDatabaseStickers = Array.isArray(databaseStickers) ? databaseStickers : [];
+
   // Figurinhas do banco filtradas para Mais Usados
-  const mostUsedStickers = databaseStickers.map(s => ({
+  const mostUsedStickers = safeDatabaseStickers.map(s => ({
     id: s.id,
     mainText: s.title,
     image_url: s.image_url,
@@ -191,7 +194,7 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
   }));
 
   // Figurinhas em alta cadastradas no Supabase
-  const trendingStickers = databaseStickers
+  const trendingStickers = safeDatabaseStickers
     .filter(s => s.is_trending)
     .map(s => ({
       id: s.id,
@@ -201,7 +204,7 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
     }));
 
   // Figurinhas de frases cadastradas no Supabase
-  const phrasesStickers = databaseStickers
+  const phrasesStickers = safeDatabaseStickers
     .filter(s => s.type === 'phrase' || s.category_slug === 'frases')
     .map(s => ({
       id: s.id,
@@ -211,7 +214,7 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
     }));
 
   // Figurinhas de elementos e desenhos cadastrados no Supabase
-  const elementsStickers = databaseStickers
+  const elementsStickers = safeDatabaseStickers
     .filter(s => s.type === 'element' || s.category_slug === 'elementos')
     .map(s => ({
       id: s.id,
