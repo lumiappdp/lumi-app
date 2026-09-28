@@ -110,6 +110,9 @@ export function CategoryDetail({
     }, 2500);
   };
 
+  // Estado para controlar o filtro rápido ativo (todas, branco, preto, sombra, moldura, minimalista, etc)
+  const [activeTagFilter, setActiveTagFilter] = useState('all');
+
   // Exibe exclusivamente os stickers reais cadastrados no Supabase para esta categoria
   const allCategoryStickers = supabaseStickers.map((stk) => ({
     id: stk.id,
@@ -117,16 +120,26 @@ export function CategoryDetail({
     label: stk.title,
     title: stk.title,
     image_url: stk.image_url,
+    tags: stk.tags || [],
     hasColorBadge: false,
     isPremium: true,
   }));
 
-
-  // Filtra stickers em tempo real com base no termo digitado
+  // Filtra stickers em tempo real com base no termo digitado e no filtro rápido selecionado
   const filteredStickers = allCategoryStickers.filter((item) => {
+    // Filtro rápido por tag / estilo
+    if (activeTagFilter !== 'all') {
+      const itemTags = Array.isArray(item.tags) ? item.tags.map(t => t.toLowerCase()) : [];
+      const itemTitle = (item.title || item.mainText || '').toLowerCase();
+      const matchesFilter = itemTags.includes(activeTagFilter) || itemTitle.includes(activeTagFilter);
+      if (!matchesFilter) return false;
+    }
+
+    // Filtro pelo campo de busca digitado
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase().trim();
-    const fullText = `${item.prefix || ''} ${item.mainText || ''} ${item.suffix || ''} ${item.label || ''} ${item.title || ''}`.toLowerCase();
+    const itemTags = Array.isArray(item.tags) ? item.tags.join(' ').toLowerCase() : '';
+    const fullText = `${item.prefix || ''} ${item.mainText || ''} ${item.suffix || ''} ${item.label || ''} ${item.title || ''} ${itemTags}`.toLowerCase();
     return fullText.includes(query);
   });
 
@@ -201,6 +214,30 @@ export function CategoryDetail({
           {copyStatus.message}
         </div>
       )}
+
+      {/* Barra de Filtros Rápidos (Estilo iOS Chips) */}
+      <div className="category-quick-filters-scroll">
+        {[
+          { id: 'all', label: 'Todos' },
+          { id: 'branco', label: '⚪ Branco' },
+          { id: 'preto', label: '⚫ Preto' },
+          { id: 'sombra', label: '🌫️ Sombras' },
+          { id: 'moldura', label: '🖼️ Molduras' },
+          { id: 'minimalista', label: '✨ Minimalista' },
+          { id: 'linha', label: '〰️ Linhas' },
+          { id: 'frase', label: '✍️ Frases' },
+          { id: 'engajamento', label: '🔥 Engajamento' },
+        ].map((chip) => (
+          <button
+            key={chip.id}
+            type="button"
+            className={`category-filter-chip ${activeTagFilter === chip.id ? 'active' : ''}`}
+            onClick={() => setActiveTagFilter(chip.id)}
+          >
+            {chip.label}
+          </button>
+        ))}
+      </div>
 
       {/* Grade de 2 colunas com os Cards de Artes Tipográficas */}
       <main className="category-stickers-grid">

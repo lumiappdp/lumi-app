@@ -369,9 +369,37 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
               </select>
             </div>
 
-            {/* Campo Tags de Busca */}
+            {/* Campo Tags de Busca com Chips Rápidos */}
             <div className="admin-field-group">
               <label>Palavras-chave (Tags para busca separadas por vírgula)</label>
+              
+              {/* Botões de atalho de tags frequentes */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                {['branco', 'preto', 'sombra', 'fundo', 'linha', 'moldura', 'minimalista', 'frase', 'engajamento', 'stories', 'polaroid', 'seta', 'loja', 'rotina'].map((presetTag) => (
+                  <button
+                    key={presetTag}
+                    type="button"
+                    onClick={() => {
+                      const currentTags = tagsInput.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+                      if (!currentTags.includes(presetTag)) {
+                        setTagsInput(currentTags.length > 0 ? `${tagsInput}, ${presetTag}` : presetTag);
+                      }
+                    }}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.08)',
+                      border: '1px solid rgba(234, 161, 172, 0.3)',
+                      borderRadius: '16px',
+                      padding: '4px 10px',
+                      fontSize: '0.78rem',
+                      color: 'inherit',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    +{presetTag}
+                  </button>
+                ))}
+              </div>
+
               <input
                 type="text"
                 placeholder="Ex: café, manhã, stories, promoção"
