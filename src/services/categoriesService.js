@@ -38,19 +38,27 @@ export async function getSectionsFromSupabase() {
       .order('display_order', { ascending: true });
 
     if (!error && Array.isArray(data)) {
-      // Mapeia categorias do Supabase em estrutura de seções
-      const mapped = data.map(cat => ({
-        id: cat.slug || cat.id,
-        title: cat.name || cat.title,
-        cards: Array.isArray(cat.cards) ? cat.cards : (cat.cover_url ? [{
-          id: `card-${cat.id}`,
-          overlayText: cat.name || cat.title,
-          tagLabel: cat.name || cat.title,
-          bgImage: cat.cover_url
-        }] : [])
-      }));
+      // Mapeia categorias do Supabase garantindo a integridade dos subcards
+      const mapped = data.map(cat => {
+        let parsedCards = [];
+        if (Array.isArray(cat.cards)) {
+          parsedCards = cat.cards;
+        } else if (typeof cat.cards === 'string') {
+          try {
+            parsedCards = JSON.parse(cat.cards);
+          } catch {
+            parsedCards = [];
+          }
+        }
 
-      // Sincroniza com o cache local (mesmo se estiver vazio [])
+        return {
+          id: cat.slug || cat.id,
+          title: cat.name || cat.title,
+          cards: parsedCards
+        };
+      });
+
+      // Sincroniza com o cache local
       saveAllSections(mapped);
       return mapped;
     }
@@ -276,13 +284,14 @@ export async function addSubcardToSection(sectionId, { overlayText, tagLabel, fi
 
   saveAllSections(updatedSections);
 
-  // Sincroniza a capa da categoria no Supabase
+  // Sincroniza a lista completa de subcards e a capa da categoria no Supabase
   try {
     const targetSec = updatedSections.find(s => s.id === sectionId);
     if (targetSec) {
       await supabase.from('categories').upsert({
         slug: targetSec.id,
         title: targetSec.title,
+        cards: targetSec.cards,
         cover_url: targetSec.cards[0]?.bgImage || null
       }, { onConflict: 'slug' });
     }
