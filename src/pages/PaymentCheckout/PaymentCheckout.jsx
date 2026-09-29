@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import logoLight from '../../../identidade-visual/lumi-logo-icone-ve.png';
-import logoDark from '../../../identidade-visual/lumi-logo-icone-ve (2).png';
+import logoLight from '../../../identidade-visual/logo-icone-dark.png';
+import logoDark from '../../../identidade-visual/logo-icone-light.png';
 import { checkPaymentStatus } from '../../services/authService';
 import './PaymentCheckout.css';
 

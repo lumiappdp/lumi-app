@@ -249,14 +249,15 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
   // Manipulador para adicionar Subcard
   const handleAddSubcardSubmit = async (e) => {
     e.preventDefault();
-    if (!subcardOverlayText.trim() || !targetNicheId) return;
+    const cleanLabel = subcardTagLabel.trim();
+    if (!cleanLabel || !targetNicheId) return;
 
     setIsUploading(true);
     setCategoryFeedback(null);
     try {
       await addSubcardToSection(targetNicheId, {
-        overlayText: subcardOverlayText,
-        tagLabel: subcardTagLabel,
+        overlayText: subcardOverlayText.trim() || cleanLabel,
+        tagLabel: cleanLabel,
         fileOrUrl: subcardImageFile,
       });
 
@@ -745,26 +746,15 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
               </select>
             </div>
 
-            {/* Texto de Sobreposição do Card */}
+            {/* Nome da Subcategoria (Campo Principal Obrigatório) */}
             <div className="admin-field-group">
-              <label>Frase Central da Imagem (Texto Estilizado no Meio)</label>
+              <label>Nome da Subcategoria / Tema</label>
               <input
                 type="text"
-                placeholder="Ex: consultório moderno, rotina jurídica, meu cantinho..."
-                value={subcardOverlayText}
-                onChange={(e) => setSubcardOverlayText(e.target.value)}
-                required
-              />
-            </div>
-
-            {/* Tag / Subtítulo */}
-            <div className="admin-field-group">
-              <label>Nome da Subcategoria / Profissão (Etiqueta no Rodapé do Card)</label>
-              <input
-                type="text"
-                placeholder="Ex: Advocacia, Odonto, Medicina, Fotografia..."
+                placeholder="Ex: Advocacia, Odonto, Medicina, Stories, Fotografia..."
                 value={subcardTagLabel}
                 onChange={(e) => setSubcardTagLabel(e.target.value)}
+                required
               />
             </div>
 
@@ -881,7 +871,7 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
                         >
                           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.85) 100%)' }} />
                           <span style={{ position: 'relative', zIndex: 2, fontSize: '0.75rem', fontWeight: 'bold', color: '#fff' }}>
-                            {card.overlayText}
+                            {card.tagLabel || card.overlayText}
                           </span>
 
                           <button

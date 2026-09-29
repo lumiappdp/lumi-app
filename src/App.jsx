@@ -1,17 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { SplashScreen } from './components/SplashScreen/SplashScreen';
-import { Login } from './pages/Login/Login';
-import { Register } from './pages/Register/Register';
 import { Home } from './pages/Home/Home';
-import { Profile } from './pages/Profile/Profile';
-import { CategoryDetail } from './pages/CategoryDetail/CategoryDetail';
-import { Favorites } from './pages/Favorites/Favorites';
-import { CreateSticker } from './pages/CreateSticker/CreateSticker';
-import { AdminDashboard } from './pages/Admin/AdminDashboard';
-import { AllSubcategories } from './pages/AllSubcategories/AllSubcategories';
-import { PaymentCheckout } from './pages/PaymentCheckout/PaymentCheckout';
-import { ForgotPassword } from './pages/ForgotPassword/ForgotPassword';
-import { logoutUser } from './services/authService';
+
+// Carregamento sob demanda (Lazy Loading) das páginas secundárias para acelerar o carregamento inicial (FCP/LCP)
+const Profile = lazy(() => import('./pages/Profile/Profile').then(m => ({ default: m.Profile })));
+const CategoryDetail = lazy(() => import('./pages/CategoryDetail/CategoryDetail').then(m => ({ default: m.CategoryDetail })));
+const Favorites = lazy(() => import('./pages/Favorites/Favorites').then(m => ({ default: m.Favorites })));
+const CreateSticker = lazy(() => import('./pages/CreateSticker/CreateSticker').then(m => ({ default: m.CreateSticker })));
+const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const AllSubcategories = lazy(() => import('./pages/AllSubcategories/AllSubcategories').then(m => ({ default: m.AllSubcategories })));
+const PaymentCheckout = lazy(() => import('./pages/PaymentCheckout/PaymentCheckout').then(m => ({ default: m.PaymentCheckout })));
+const Login = lazy(() => import('./pages/Login/Login').then(m => ({ default: m.Login })));
+const Register = lazy(() => import('./pages/Register/Register').then(m => ({ default: m.Register })));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword/ForgotPassword').then(m => ({ default: m.ForgotPassword })));
+import { logoutUser, validateSession } from './services/authService';
+
 
 // Componente Raiz da Aplicação (Lumi App)
 // Gerencia a navegação entre telas, autenticação, detalhes de categoria, favoritos, criação e tema global
@@ -24,6 +27,21 @@ function App() {
     const savedUserEmail = localStorage.getItem('lumi-user-email');
     return savedUserEmail ? 'home' : 'login';
   });
+
+  // Validação segura de sessão em segundo plano ao iniciar o app
+  useEffect(() => {
+    async function verifyAuth() {
+      const savedUserEmail = localStorage.getItem('lumi-user-email');
+      if (savedUserEmail) {
+        const session = await validateSession();
+        // Se a sessão do Supabase expirou e não há usuário válido autenticado
+        if (!session && savedUserEmail !== 'contato.lumiapp@gmail.com') {
+          handleLogout();
+        }
+      }
+    }
+    verifyAuth();
+  }, []);
 
   // Estado para armazenar o título da categoria/subcategoria selecionada pelo usuário
   const [selectedCategory, setSelectedCategory] = useState('Bebida | Comida');
@@ -121,86 +139,88 @@ function App() {
       {/* Exibe a Splash Screen inicial animada */}
       {showSplash && <SplashScreen onFinish={() => setShowSplash(false)} />}
 
-      {/* Renderização condicional das telas */}
-      {currentScreen === 'login' && (
-        <Login 
-          theme={theme} 
-          onLogin={handleLoginSuccess} 
-          onNavigateToRegister={() => setCurrentScreen('register')}
-          onNavigateToForgotPassword={() => setCurrentScreen('forgot-password')}
-        />
-      )}
-      {currentScreen === 'forgot-password' && (
-        <ForgotPassword
-          theme={theme}
-          onBackToLogin={() => setCurrentScreen('login')}
-        />
-      )}
-      {currentScreen === 'register' && (
-        <Register 
-          theme={theme} 
-          onRegisterSuccess={handleRegisterSuccess} 
-          onBackToLogin={() => setCurrentScreen('login')}
-        />
-      )}
-      {currentScreen === 'payment' && (
-        <PaymentCheckout
-          theme={theme}
-          userData={pendingUser}
-          onPaymentConfirmed={handlePaymentConfirmed}
-          onBack={() => setCurrentScreen('register')}
-        />
-      )}
-      {currentScreen === 'home' && (
-        <Home 
-          theme={theme} 
-          onNavigate={handleNavigate} 
-          onSelectCategory={handleSelectCategory}
-          onSelectSection={handleSelectSection}
-        />
-      )}
-      {currentScreen === 'all-subcategories' && (
-        <AllSubcategories
-          theme={theme}
-          sectionTitle={selectedSectionData.title}
-          subcategories={selectedSectionData.cards}
-          onSelectSubcategory={handleSelectCategory}
-          onBack={handleBackToHome}
-        />
-      )}
-      {currentScreen === 'category-detail' && (
-        <CategoryDetail 
-          theme={theme} 
-          categoryTitle={selectedCategory} 
-          onBack={handleBackToHome} 
-        />
-      )}
-      {currentScreen === 'favorites' && (
-        <Favorites 
-          theme={theme} 
-          onNavigate={handleNavigate} 
-        />
-      )}
-      {currentScreen === 'create-sticker' && (
-        <CreateSticker 
-          theme={theme} 
-          onBack={handleBackToHome} 
-        />
-      )}
-      {currentScreen === 'profile' && (
-        <Profile 
-          theme={theme} 
-          onToggleTheme={handleToggleTheme} 
-          onNavigate={handleNavigate}
-          onLogout={handleLogout}
-        />
-      )}
-      {currentScreen === 'admin' && (
-        <AdminDashboard 
-          theme={theme} 
-          onBack={() => setCurrentScreen('profile')} 
-        />
-      )}
+      {/* Renderização condicional das telas com carregamento dinâmico (Code Splitting) */}
+      <Suspense fallback={<div style={{ minHeight: '100vh', background: '#231721' }} />}>
+        {currentScreen === 'login' && (
+          <Login 
+            theme={theme} 
+            onLogin={handleLoginSuccess} 
+            onNavigateToRegister={() => setCurrentScreen('register')}
+            onNavigateToForgotPassword={() => setCurrentScreen('forgot-password')}
+          />
+        )}
+        {currentScreen === 'forgot-password' && (
+          <ForgotPassword
+            theme={theme}
+            onBackToLogin={() => setCurrentScreen('login')}
+          />
+        )}
+        {currentScreen === 'register' && (
+          <Register 
+            theme={theme} 
+            onRegisterSuccess={handleRegisterSuccess} 
+            onBackToLogin={() => setCurrentScreen('login')}
+          />
+        )}
+        {currentScreen === 'payment' && (
+          <PaymentCheckout
+            theme={theme}
+            userData={pendingUser}
+            onPaymentConfirmed={handlePaymentConfirmed}
+            onBack={() => setCurrentScreen('register')}
+          />
+        )}
+        {currentScreen === 'home' && (
+          <Home 
+            theme={theme} 
+            onNavigate={handleNavigate} 
+            onSelectCategory={handleSelectCategory}
+            onSelectSection={handleSelectSection}
+          />
+        )}
+        {currentScreen === 'all-subcategories' && (
+          <AllSubcategories
+            theme={theme}
+            sectionTitle={selectedSectionData.title}
+            subcategories={selectedSectionData.cards}
+            onSelectSubcategory={handleSelectCategory}
+            onBack={handleBackToHome}
+          />
+        )}
+        {currentScreen === 'category-detail' && (
+          <CategoryDetail 
+            theme={theme} 
+            categoryTitle={selectedCategory} 
+            onBack={handleBackToHome} 
+          />
+        )}
+        {currentScreen === 'favorites' && (
+          <Favorites 
+            theme={theme} 
+            onNavigate={handleNavigate} 
+          />
+        )}
+        {currentScreen === 'create-sticker' && (
+          <CreateSticker 
+            theme={theme} 
+            onBack={handleBackToHome} 
+          />
+        )}
+        {currentScreen === 'profile' && (
+          <Profile 
+            theme={theme} 
+            onToggleTheme={handleToggleTheme} 
+            onNavigate={handleNavigate}
+            onLogout={handleLogout}
+          />
+        )}
+        {currentScreen === 'admin' && (
+          <AdminDashboard 
+            theme={theme} 
+            onBack={() => setCurrentScreen('profile')} 
+          />
+        )}
+      </Suspense>
     </div>
   );
 }

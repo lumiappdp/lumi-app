@@ -72,6 +72,19 @@ export async function getCurrentUser() {
   return user;
 }
 
+// Valida se a sessão atual do Supabase é autêntica e não expirou
+// @returns {Promise<Object|null>} Retorna o objeto de sessão se válido, ou null
+export async function validateSession() {
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error || !session) return null;
+    return session;
+  } catch (err) {
+    console.warn('Erro ao validar sessão com Supabase:', err);
+    return null;
+  }
+}
+
 // Verifica o status de pagamento de um usuário (liberação automática e validação de renovação)
 // @param {string} email
 // @returns {Promise<boolean>}
@@ -200,5 +213,44 @@ export async function getCurrentUserProfile() {
 
   if (error) return null;
   return data;
+}
+
+// Atualiza a foto de perfil do usuário no Supabase
+// @param {string} email - E-mail do usuário
+// @param {string} avatarUrl - URL ou Base64 da imagem
+export async function updateUserAvatar(email, avatarUrl) {
+  if (!email || !avatarUrl) return null;
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ avatar_url: avatarUrl })
+      .eq('email', email.trim().toLowerCase());
+
+    if (error) console.warn('Aviso ao sincronizar foto com o Supabase:', error);
+    return data;
+  } catch (err) {
+    console.warn('Erro ao salvar foto no banco:', err);
+    return null;
+  }
+}
+
+// Busca a foto de perfil salva no Supabase
+// @param {string} email - E-mail do usuário
+// @returns {Promise<string|null>}
+export async function getUserAvatar(email) {
+  if (!email) return null;
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('avatar_url')
+      .eq('email', email.trim().toLowerCase())
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return data.avatar_url || null;
+  } catch (err) {
+    console.warn('Erro ao buscar foto no banco:', err);
+    return null;
+  }
 }
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import lumiHeartIcon from '../../../identidade-visual/9.png';
+import lumiHeartIcon from '../../../identidade-visual/icone-coracao-lumi.png';
 import { clipboardService } from '../../services/clipboardService';
 import { favoritesService } from '../../services/favoritesService';
 import { recentService } from '../../services/recentService';

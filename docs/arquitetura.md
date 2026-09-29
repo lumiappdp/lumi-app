@@ -1,48 +1,60 @@
 # Arquitetura e Especificação Técnica - Lumi App
 
 ## 1. Visão Geral
-O **Lumi App** é um aplicativo de criação e descoberta de figurinhas, frases e elementos visuais para Instagram Stories (*Descobrir → Escolher → Copiar → Colar no Story*). Desenvolvido com foco em estética premium (estilo iOS), alta performance e responsividade em Android, iOS, Tablets, Web e Desktop (PWA).
+O **Lumi App** é uma plataforma SaaS e PWA focada em criadores de conteúdo e profissionais, permitindo a descoberta, personalização e cópia instantânea de figurinhas, frases e elementos visuais de alta qualidade diretamente para os Instagram Stories (*Descobrir → Escolher → Copiar → Colar no Story*). Desenvolvido com foco em estética premium (estilo iOS), alta performance e responsividade em Android, iOS, Tablets, Web e Desktop (PWA).
 
 ---
 
-## 2. Tecnologias Principais
-- **Base / Frontend**: React 18+ (JavaScript) com Vite.
-- **Estilização**: CSS Vanilla com Design Tokens centralizados (`src/styles/variables.css`).
+## 2. Stack Tecnológica
+- **Base / Frontend**: React 18+ (JavaScript Moderno ES6+), Vite 8+.
+- **Estilização**: CSS Vanilla Modular com Design Tokens centralizados (`src/styles/variables.css`).
 - **Tema Padrão**: Dark Mode (`#231721`) com persistência em `localStorage` e suporte a Light Mode.
-- **Empacotamento / Deploy**: PWA (Web/Desktop) e suporte nativo via Capacitor.
+- **Backend & Database**: Supabase (PostgreSQL, Auth com JWT, Row Level Security, Edge Functions).
+- **Pagamentos**: Integração de Webhooks com Kiwify (Planos Mensal e Anual com liberação em tempo real).
+- **Deploy**: PWA (Web, Desktop, iOS e Android via Capacitor).
 
 ---
 
-## 3. Estrutura de Pastas
+## 3. Estrutura do Projeto
 ```text
 lumi-app/
 ├── docs/                         # Documentações de arquitetura e padrões de código
 │   ├── arquitetura.md
 │   └── padroes_codigo.md
 ├── identidade-visual/            # Logotipos oficiais e ativos da marca
-├── public/                       # Arquivos estáticos
+├── public/                       # Arquivos estáticos (robots.txt, manifest)
 └── src/
-    ├── assets/                   # Ícones e imagens
     ├── components/               # Componentes reutilizáveis
-    │   └── SplashScreen/         # Splash screen animada de inicialização
-    ├── pages/                    # Telas da aplicação
-    │   ├── Login/                # Autenticação com e-mail/senha
-    │   ├── Register/             # Cadastro com seletor de planos (Anual/Mensal)
-    │   ├── Home/                 # Feed principal e abas de filtros
-    │   ├── CategoryDetail/       # Visualização detalhada de categoria
-    │   ├── Favorites/            # Lista de figurinhas favoritadas
+    │   ├── SplashScreen/         # Splash screen animada com áudio harmônico (1.4s)
+    │   └── StickerPreviewModal/  # Modal de visualização ampliada e cópia de stickers
+    ├── pages/                    # Módulos de telas da aplicação
+    │   ├── Login/                # Login com verificação estrita e botão de renovação Kiwify
+    │   ├── Register/             # Cadastro com seletor de planos e validação de senha forte
+    │   ├── ForgotPassword/       # Fluxo de recuperação de senha por e-mail (OTP)
+    │   ├── PaymentCheckout/      # Checkout e monitoramento em tempo real do Kiwify
+    │   ├── Home/                 # Feed principal com carrosséis e dock iOS
+    │   ├── AllSubcategories/     # Galeria completa de subcategorias de um nicho
+    │   ├── CategoryDetail/       # Visualização e cópia de figurinhas por subcategoria
+    │   ├── Favorites/            # Lista de figurinhas favoritadas pelo usuário
     │   ├── CreateSticker/        # Canvas interativo para criação de stickers
-    │   └── Profile/              # Perfil, preferências de tema e configurações
-    ├── services/                 # Regras de negócio desacopladas
-    │   ├── clipboardService.js   # Cópia para área de transferência em PNG
-    │   ├── recentService.js      # Histórico de figurinhas copiadas
-    │   ├── favoritesService.js   # Persistência de favoritos
-    │   └── creationsService.js   # Armazenamento das criações do usuário
-    ├── styles/                   # Design tokens e variáveis de cor
+    │   ├── Profile/              # Perfil, preferências, foto sincronizada e suporte
+    │   └── Admin/                # Painel de controle do Administrador Supremo
+    ├── services/                 # Camada de serviços desacoplada
+    │   ├── supabaseClient.js     # Cliente de conexão Supabase
+    │   ├── authService.js        # Autenticação, RLS, status de assinatura e avatares
+    │   ├── adminService.js       # Gestão de usuários, avisos globais e equipe
+    │   ├── categoriesService.js  # Gestão dinâmica de nichos e capas de subcards
+    │   ├── stickersService.js    # Catálogo dinâmico de figurinhas no Supabase
+    │   ├── creationsService.js   # Galeria pessoal ("Eu criei") com nuvem Supabase
+    │   ├── clipboardService.js   # Cópia para o clipboard em formato PNG transparente
+    │   ├── recentService.js      # Histórico de stickers copiados
+    │   ├── favoritesService.js   # Gerenciamento de figurinhas favoritas
+    │   └── usageService.js       # Contagem de cliques e mais usados
+    ├── styles/                   # Tokens e temas globais
     │   └── variables.css
-    ├── App.jsx                   # Roteamento e gerenciamento de estado global
-    ├── index.css                 # Reset e tipografia global
-    └── main.jsx                  # Ponto de entrada do React
+    ├── App.jsx                   # Roteamento central com Code Splitting (React.lazy)
+    ├── index.css                 # Reset global e fontes
+    └── main.jsx                  # Ponto de entrada da aplicação
 ```
 
 ---
@@ -50,50 +62,49 @@ lumi-app/
 ## 4. Módulos e Telas
 
 ### 4.1. Abertura (Splash Screen)
-- Duração: 3.2s com animação de traçado e revelação orgânica da logo oficial `lumi-logo-icone-ve.png`.
+- Duração otimizada de 1.4s (fade-out aos 1.1s) com áudio harmônico sintetizado (E5, B5, G#6) e renderização ágil da logo oficial com dimensões explícitas para máxima nota no Lighthouse.
 
 ### 4.2. Autenticação (Login)
-- Formulário em pílula com controle de visibilidade de senha.
-- Navegação para a Home (`onLogin`) e direcionamento para a tela de Cadastro.
+- Formulário em pílula com controle de visibilidade de senha e botões de apagar com 1 clique (`✕`).
+- Validação estrita de pagamento ativo (`checkPaymentStatus`). Em caso de inadimplência ou plano vencido, bloqueia o acesso e exibe botão direto para o checkout da Kiwify.
 
 ### 4.3. Cadastro e Seleção de Planos (Register)
-- Formulário de dados cadastrais (Nome, E-mail, Senha).
+- Formulário de dados cadastrais (Nome, Nome de Usuário `@handle`, E-mail, Senha).
+- Validação de **senha forte** (mínimo 8 dígitos, letras, números e caracteres especiais) com checklist visual em tempo real.
 - **Seletor de Planos**:
-  - **Plano Anual**: R$ 89,90/ano (Mais vantajoso ⭐).
+  - **Plano Anual**: R$ 89,90/ano (Mais vantajoso).
   - **Plano Mensal**: R$ 14,90/mês (Flexível).
-- Armazenamento da preferência em `localStorage` e ativação direta da conta.
 
-### 4.4. Página Inicial (Home)
+### 4.4. Recuperação de Senha (ForgotPassword)
+- Fluxo em 3 etapas com e-mail cadastrado, verificação de código e redefinição de senha segura via Supabase Auth.
+
+### 4.5. Checkout e Pagamento (PaymentCheckout)
+- Redirecionamento para o checkout oficial da Kiwify com parâmetros pré-preenchidos.
+- Monitoramento em tempo real (polling a cada 5s) e botão de checagem manual para liberação instantânea.
+
+### 4.6. Página Inicial (Home)
 - **Carrossel de Filtros Deslizável (Touch/Mouse drag)**:
-  - **Nichos**: Feed categorizado (Universais, Profissões, Lojas | Comércios, Datas comemorativas, etc.).
-  - **Mais usados**: Cards mais populares com cópia rápida e botão de favoritar.
+  - **Nichos**: Feed de carrosséis categorizados com capas nítidas sem poluição visual.
+  - **Mais usados**: Figurinhas mais populares com estatísticas e botão de favoritar.
   - **Recentes**: Histórico dinâmico alimentado pelo `recentService`.
-  - **Eu criei**: Galeria de criações salvas do usuário (`creationsService`).
+  - **Eu criei**: Galeria pessoal sincronizada na nuvem (`creationsService`).
   - **Em alta 🔥**: Seleção de figurinhas em tendência.
-  - **Frases**: Coleção exclusiva de tipografias e citações.
-  - **Elementos**: Ilustrações vetoriais, desenhos e emojis puros.
+  - **Elementos**: Ilustrações vetoriais e artes diretas do Supabase.
 - **Barra de Navegação Inferior (Dock iOS)**:
-  - Início, Favoritos, Botão Flutuante (+ Criar), Vídeos/Mídias (*Toast "Em breve"*), e Perfil.
+  - Início, Favoritos, Botão Flutuante (+ Criar), e Perfil.
 
-### 4.5. Detalhes da Categoria (CategoryDetail)
-- Grade de stickers com suporte a busca em tempo real, botão de voltar ao feed e cópia direta.
-
-### 4.6. Favoritos (Favorites)
-- Lista reativa de figurinhas salvas pelo usuário com opção de desfavoritar e copiar instantaneamente.
-
-### 4.7. Criador de Stickers (CreateSticker)
-- Canvas interativo para personalização de texto, seleção de fontes elegantes, ajuste de cores, tamanhos e exportação/cópia.
-
-### 4.8. Perfil do Usuário (Profile)
-- Foto de perfil personalizável com upload e persistência local.
-- Status da assinatura e identificação.
-- Alternador de Tema Escuro/Claro em tempo real.
-- Ações configuradas: *Desbloquear Premium*, *Política de Privacidade*, *Termos de uso*, *Instagram*, *Suporte & Ajuda via WhatsApp*, *Sair da conta* e *Apagar conta*.
+### 4.7. Painel Administrativo (AdminDashboard)
+- Acesso exclusivo para a conta Master (`contato.lumiapp@gmail.com`).
+- Upload e exclusão em lote de figurinhas no Supabase com tags.
+- Criação e edição de nichos e subcards sem campos obrigatórios desnecessários.
+- Gestão de clientes com liberação/bloqueio manual em 1 clique.
+- Disparo de avisos globais e métricas.
 
 ---
 
-## 5. Camada de Serviços (`src/services/`)
-1. **`clipboardService.js`**: Converte stickers/canvas em formato `image/png` e copia para o Clipboard nativo com feedback via Toast.
-2. **`recentService.js`**: Registra no `localStorage` os últimos stickers copiados para exibição na aba "Recentes".
-3. **`favoritesService.js`**: Gerencia o estado e array de IDs favoritados.
-4. **`creationsService.js`**: Salva no storage local as imagens geradas pelo canvas na aba "Eu criei".
+## 5. Camada de Segurança e RLS (Supabase)
+- **Row Level Security (RLS)**:
+  - `profiles`: Cada usuário acessa apenas seu próprio perfil (`auth.uid() = id`). Apenas o Administrador Supremo pode alterar o status de pagamento e planos.
+  - `stickers`: Leitura pública para usuários autenticados e gravação/exclusão restrita ao Admin.
+  - `user_gallery`: Cada usuário acessa e gerencia exclusivamente suas próprias figurinhas.
+- **Sessão Segura**: Validação em segundo plano de tokens JWT via `validateSession()`.

@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 // Importação dos logotipos oficiais da Lumi para tema claro e escuro
-import lumiLogoLight from '../../../identidade-visual/lumi-logo-ve.png';
-import lumiLogoDark from '../../../identidade-visual/lumi-logo-ve.png';
-import lumiHeartIcon from '../../../identidade-visual/9.png';
+import lumiLogoLight from '../../../identidade-visual/logo-horizontal.png';
+import lumiLogoDark from '../../../identidade-visual/logo-horizontal.png';
+import lumiHeartIcon from '../../../identidade-visual/icone-coracao-lumi.png';
 import { creationsService } from '../../services/creationsService';
 import { clipboardService } from '../../services/clipboardService';
 import { favoritesService } from '../../services/favoritesService';
@@ -317,6 +317,33 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
     setTimeout(() => setToastMessage(''), 2500);
   };
 
+  // Limpa completamente todos os recentes
+  const handleClearAllRecents = () => {
+    if (!window.confirm('Deseja limpar todo o histórico de stickers recentes?')) return;
+    recentService.clearAllRecents();
+    setRecentStickers([]);
+    setToastMessage('Histórico de recentes limpo!');
+    setTimeout(() => setToastMessage(''), 2500);
+  };
+
+  // Remove um item individual de recentes
+  const handleRemoveRecentItem = (e, itemId) => {
+    e.stopPropagation();
+    const updated = recentService.removeRecent(itemId);
+    setRecentStickers(updated);
+    setToastMessage('Removido dos recentes.');
+    setTimeout(() => setToastMessage(''), 2500);
+  };
+
+  // Limpa o ranking de mais usados
+  const handleClearAllUsage = () => {
+    if (!window.confirm('Deseja redefinir a contagem de stickers mais usados?')) return;
+    usageService.clearAllUsage();
+    setUsageCounts({});
+    setToastMessage('Mais usados redefinidos!');
+    setTimeout(() => setToastMessage(''), 2500);
+  };
+
   // Exclui uma criação personalizada
   const handleDeleteCreation = (e, id) => {
     e.stopPropagation();
@@ -332,6 +359,17 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
       icon: (
         <svg className="pill-svg-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        </svg>
+      )
+    },
+    {
+      id: 'eu-criei',
+      label: 'Minha Galeria',
+      icon: (
+        <svg className="pill-svg-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect width="18" height="18" x="3" y="3" rx="4" ry="4"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <polyline points="21 15 16 10 5 21"></polyline>
         </svg>
       )
     },
@@ -380,17 +418,6 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
           <circle cx="12" cy="12" r="10"></circle>
           <path d="M8 12h8"></path>
           <path d="M12 8v8"></path>
-        </svg>
-      )
-    },
-    {
-      id: 'eu-criei',
-      label: 'Minha Galeria',
-      icon: (
-        <svg className="pill-svg-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="17 8 12 3 7 8"></polyline>
-          <line x1="12" y1="3" x2="12" y2="15"></line>
         </svg>
       )
     }
@@ -451,9 +478,17 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
         onChange={handleFileChange}
       />
 
-      {/* Topo com o Logotipo Oficial da Lumi */}
+      {/* Topo com o Logotipo Oficial da Lumi contendo dimensões explícitas para máxima performance */}
       <header className="home-header">
-        <img src={theme === 'dark' ? lumiLogoDark : lumiLogoLight} alt="Lumi" className="home-lumi-logo" />
+        <img 
+          src={theme === 'dark' ? lumiLogoDark : lumiLogoLight} 
+          alt="Lumi" 
+          className="home-lumi-logo" 
+          width="160"
+          height="54"
+          loading="eager"
+          decoding="async"
+        />
       </header>
 
       {/* Banner de Aviso Global Ativado pelo Administrador */}
@@ -553,8 +588,24 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
       <main className="home-content-sections">
         {activeTab === 'mais-usados' ? (
           <section className="content-section">
-            <div className="section-header">
+            <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 className="section-title">Stickers mais usados</h2>
+              {filteredMostUsed.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearAllUsage}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#EAA1AC',
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    fontWeight: '600'
+                  }}
+                >
+                  Limpar estatísticas
+                </button>
+              )}
             </div>
 
             <div className="cards-grid">
@@ -589,7 +640,15 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
 
                   {/* Conteúdo Central do Sticker */}
                   <div className="sticker-content-center">
-                    {item.isBottle ? (
+                    {item.image_url || item.imageData ? (
+                      <div className="admin-uploaded-sticker-wrapper">
+                        <img 
+                          src={item.image_url || item.imageData} 
+                          alt={item.mainText || item.label || 'Sticker'} 
+                          style={{ maxWidth: '88px', maxHeight: '88px', objectFit: 'contain' }}
+                        />
+                      </div>
+                    ) : item.isBottle ? (
                       <div className="bottle-art-wrapper">
                         <span className="bottle-label-curved">{item.label}</span>
                         <div className="bottle-svg-icon">
@@ -615,8 +674,24 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
           </section>
         ) : activeTab === 'recentes' ? (
           <section className="content-section">
-            <div className="section-header">
+            <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 className="section-title">Usados recentemente</h2>
+              {filteredRecents.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleClearAllRecents}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#EAA1AC',
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    fontWeight: '600'
+                  }}
+                >
+                  Limpar todos
+                </button>
+              )}
             </div>
 
             {filteredRecents.length === 0 ? (
@@ -636,9 +711,33 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
                     role="button"
                     tabIndex="0"
                     aria-label={`Visualizar sticker: ${item.mainText || item.label}`}
+                    style={{ position: 'relative' }}
                   >
-                    {/* Topo do Card: Botão de Favoritar */}
-                    <div className="card-top-actions" style={{ justifyContent: 'flex-end' }}>
+                    {/* Topo do Card: Botão de Remover e Botão de Favoritar */}
+                    <div className="card-top-actions" style={{ justifyContent: 'space-between' }}>
+                      {/* Botão de Excluir dos Recentes */}
+                      <button
+                        type="button"
+                        onClick={(e) => handleRemoveRecentItem(e, item.id)}
+                        aria-label="Remover do histórico"
+                        title="Remover do histórico"
+                        style={{
+                          background: 'rgba(255, 77, 77, 0.15)',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '22px',
+                          height: '22px',
+                          color: '#FF8080',
+                          fontSize: '11px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        ✕
+                      </button>
+
                       {/* Botão de Favoritar */}
                       <button
                         type="button"
@@ -654,7 +753,15 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
 
                     {/* Conteúdo Central do Sticker */}
                     <div className="sticker-content-center">
-                      {item.isBottle ? (
+                      {item.image_url || item.imageData ? (
+                        <div className="admin-uploaded-sticker-wrapper">
+                          <img 
+                            src={item.image_url || item.imageData} 
+                            alt={item.mainText || item.label || 'Sticker'} 
+                            style={{ maxWidth: '88px', maxHeight: '88px', objectFit: 'contain' }}
+                          />
+                        </div>
+                      ) : item.isBottle ? (
                         <div className="bottle-art-wrapper">
                           <span className="bottle-label-curved">{item.label}</span>
                           <div className="bottle-svg-icon">
@@ -716,7 +823,15 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
 
                   {/* Conteúdo Central do Sticker */}
                   <div className="sticker-content-center">
-                    {item.isBottle ? (
+                    {item.image_url || item.imageData ? (
+                      <div className="admin-uploaded-sticker-wrapper">
+                        <img 
+                          src={item.image_url || item.imageData} 
+                          alt={item.mainText || item.label || 'Sticker'} 
+                          style={{ maxWidth: '88px', maxHeight: '88px', objectFit: 'contain' }}
+                        />
+                      </div>
+                    ) : item.isBottle ? (
                       <div className="bottle-art-wrapper">
                         <span className="bottle-label-curved">{item.label}</span>
                         <div className="bottle-svg-icon">
@@ -1039,7 +1154,6 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
                       )}
 
                       <div className="card-overlay-gradient">
-                        <p className="card-custom-typography">{card.overlayText}</p>
                         {card.tagLabel && (
                           <div className="card-footer-pill">
                             {card.tagLabel}
@@ -1055,14 +1169,19 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
         )}
       </main>
 
-      {/* Barra de Navegação Inferior Estilo Dock iOS com Botão Hero Central */}
+      {/* Barra de Navegação Inferior Estilo Dock iOS com Botão Hero Central 100% Simétrico */}
       <nav className="bottom-nav-bar" aria-label="Navegação principal">
         {/* Início */}
         <button
           type="button"
           className={`nav-item ${activeNav === 'home' ? 'active' : ''}`}
-          onClick={() => onNavigate && onNavigate('home')}
+          onClick={() => {
+            if (onNavigate) onNavigate('home');
+            setActiveTab('nichos');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
           aria-label="Início"
+          title="Início"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 10.5L12 3l9 7.5V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -1070,7 +1189,7 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
           </svg>
         </button>
 
-        {/* Botão Hero Central de Favoritos em Alto Destaque */}
+        {/* Botão Hero Central de Favoritos em Alto Destaque e 100% Centralizado */}
         <button 
           type="button" 
           className="floating-action-plus" 

@@ -80,7 +80,6 @@ export function AllSubcategories({
                 aria-label={`Ver artes de ${item.tagLabel || item.overlayText}`}
               >
                 <div className="card-overlay-gradient">
-                  <p className="card-custom-typography">{item.overlayText}</p>
                   {item.tagLabel && (
                     <div className="card-footer-pill">
                       {item.tagLabel}

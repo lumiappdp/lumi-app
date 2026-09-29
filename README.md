@@ -1,16 +1,31 @@
-# React + Vite
+# Lumi App - Plataforma Oficial de Figurinhas para Stories
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Aplicativo oficial de criação, descoberta e cópia instantânea de figurinhas em PNG transparente para Instagram Stories.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 📖 Documentação Oficial
 
-## React Compiler
+Toda a documentação técnica, guia de arquitetura, padrões de código e manual de operação estão centralizados na pasta [`docs/`](./docs/):
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- 📘 [**Manual Mestre do Desenvolvedor & Operação** (`docs/MANUAL_MESTRE.md`)](./docs/MANUAL_MESTRE.md) ⭐ *(Documento Principal Completo)*
+- 🏛️ [**Arquitetura e Especificação Técnica** (`docs/arquitetura.md`)](./docs/arquitetura.md)
+- 📐 [**Padrões de Código e Guia de Desenvolvimento** (`docs/padroes_codigo.md`)](./docs/padroes_codigo.md)
 
-## Expanding the Oxlint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## 🚀 Comandos Rápidos
+
+```bash
+# Iniciar servidor local de desenvolvimento
+npm run dev
+
+# Compilar pacote de produção (Build)
+npm run build
+
+# Testar versão de produção localmente (Preview)
+npm run preview
+
+# Verificar qualidade de código
+npm run lint
+```

@@ -1,7 +1,8 @@
+import { supabase } from './supabaseClient';
+
 // ==================================================
-// SERVIÇO DE MINHAS CRIAÇÕES - LUMI APP
-// Gerencia a persistência e geração de imagens PNG transparentes
-// criadas pelos usuários no canvas do Lumi App
+// SERVIÇO DE MINHAS CRIAÇÕES & GALERIA DO USUÁRIO - LUMI APP
+// Gerencia a persistência local (cache) e sincronização com a tabela user_gallery do Supabase
 // ==================================================
 
 const STORAGE_KEY = 'lumi-my-creations';
@@ -73,7 +74,38 @@ export const creationsService = {
     }
   },
 
-  // Salva uma nova figurinha na lista de criações do usuário
+  // Sincroniza e busca as figurinhas do usuário salvas no Supabase
+  // @param {string} userEmail - E-mail do usuário autenticado
+  // @returns {Promise<Array<Object>>}
+  async fetchUserGalleryFromCloud(userEmail) {
+    if (!userEmail) return this.getCreations();
+    try {
+      const { data, error } = await supabase
+        .from('user_gallery')
+        .select('*')
+        .eq('user_email', userEmail.trim().toLowerCase())
+        .order('created_at', { ascending: false });
+
+      if (!error && Array.isArray(data)) {
+        const cloudCreations = data.map(item => ({
+          id: String(item.id),
+          title: item.title,
+          imageData: item.image_data,
+          createdAt: item.created_at,
+          isImported: true
+        }));
+
+        // Salva cópia em cache local
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudCreations));
+        return cloudCreations;
+      }
+    } catch (err) {
+      console.warn('Erro ao buscar galeria do Supabase:', err);
+    }
+    return this.getCreations();
+  },
+
+  // Salva uma nova figurinha na lista de criações do usuário e no Supabase
   // @param {Object} params - Parâmetros da criação
   // @param {HTMLElement} params.domElement - Elemento do canvas a ser salvo
   // @param {string} params.title - Título ou frase da figurinha
@@ -82,6 +114,7 @@ export const creationsService = {
     try {
       const pngDataUrl = await generateTransparentPng(domElement);
       const creations = this.getCreations();
+      const userEmail = localStorage.getItem('lumi-user-email') || '';
 
       const newCreation = {
         id: `creation_${Date.now()}`,
@@ -93,6 +126,20 @@ export const creationsService = {
       creations.unshift(newCreation);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(creations));
 
+      // Sincroniza em segundo plano no Supabase
+      if (userEmail) {
+        supabase
+          .from('user_gallery')
+          .insert([{
+            user_email: userEmail.trim().toLowerCase(),
+            title: newCreation.title,
+            image_data: newCreation.imageData
+          }])
+          .then(({ error }) => {
+            if (error) console.warn('Aviso ao sincronizar figurinha na nuvem:', error);
+          });
+      }
+
       return { success: true, item: newCreation };
     } catch (err) {
       console.error('Erro ao salvar criação:', err);
@@ -100,11 +147,20 @@ export const creationsService = {
     }
   },
 
-  // Exclui uma criação por ID
+  // Exclui uma criação por ID (local e no Supabase)
   // @param {string} id - Identificador da criação
-  removeCreation(id) {
-    const creations = this.getCreations().filter(c => c.id !== id);
+  async removeCreation(id) {
+    const creations = this.getCreations().filter(c => String(c.id) !== String(id));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(creations));
+
+    try {
+      await supabase
+        .from('user_gallery')
+        .delete()
+        .eq('id', id);
+    } catch (err) {
+      console.warn('Erro ao remover do Supabase:', err);
+    }
   },
 
   // Importa uma figurinha transparente do rolo da câmera/galeria do usuário
@@ -120,9 +176,10 @@ export const creationsService = {
         }
 
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
           const imageData = e.target.result;
           const creations = this.getCreations();
+          const userEmail = localStorage.getItem('lumi-user-email') || '';
 
           const newCreation = {
             id: `imported_${Date.now()}`,
@@ -134,6 +191,27 @@ export const creationsService = {
 
           creations.unshift(newCreation);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(creations));
+
+          // Sincroniza em segundo plano no Supabase
+          if (userEmail) {
+            try {
+              const { data, error } = await supabase
+                .from('user_gallery')
+                .insert([{
+                  user_email: userEmail.trim().toLowerCase(),
+                  title: newCreation.title,
+                  image_data: newCreation.imageData
+                }])
+                .select();
+
+              if (!error && data?.[0]?.id) {
+                newCreation.id = String(data[0].id);
+              }
+            } catch (err) {
+              console.warn('Aviso ao sincronizar upload com Supabase:', err);
+            }
+          }
+
           resolve({ success: true, item: newCreation });
         };
 

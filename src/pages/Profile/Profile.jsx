@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { checkIsAdmin, deleteAccountUser } from '../../services/authService';
+import { useState, useRef, useEffect } from 'react';
+import { checkIsAdmin, deleteAccountUser, updateUserAvatar, getUserAvatar } from '../../services/authService';
 import { sendUserSuggestion } from '../../services/adminService';
 import { LegalModal } from '../Legal/LegalModal';
 import { LEGAL_DOCS } from '../Legal/legalContent';
@@ -26,20 +26,42 @@ export function Profile({ theme = 'dark', onToggleTheme, onNavigate, onLogout })
   const [isSendingSuggestion, setIsSendingSuggestion] = useState(false);
   const [suggestionSuccess, setSuggestionSuccess] = useState(false);
 
-  // Estado da foto de perfil com persistência no localStorage
+  // Recupera e-mail do usuário logado
+  const userEmail = localStorage.getItem('lumi-user-email') || '';
+
+  // Estado da foto de perfil com persistência no localStorage e Supabase
   const [profilePhoto, setProfilePhoto] = useState(() => {
     return localStorage.getItem('lumi-profile-photo') || null;
   });
 
-  // Manipulador para carregar e salvar a nova foto de perfil
+  // Busca a foto salva no banco de dados na montagem do componente se não estiver em cache
+  useEffect(() => {
+    async function syncAvatarFromCloud() {
+      if (userEmail) {
+        const cloudAvatar = await getUserAvatar(userEmail);
+        if (cloudAvatar) {
+          setProfilePhoto(cloudAvatar);
+          localStorage.setItem('lumi-profile-photo', cloudAvatar);
+        }
+      }
+    }
+    syncAvatarFromCloud();
+  }, [userEmail]);
+
+  // Manipulador para carregar e salvar a nova foto de perfil localmente e no Supabase
   const handlePhotoUpload = (e) => {
     const file = e.target.files && e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = () => {
+      reader.onload = async () => {
         const base64Image = reader.result;
         setProfilePhoto(base64Image);
         localStorage.setItem('lumi-profile-photo', base64Image);
+
+        // Salva na nuvem do Supabase
+        if (userEmail) {
+          await updateUserAvatar(userEmail, base64Image);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -76,8 +98,7 @@ export function Profile({ theme = 'dark', onToggleTheme, onNavigate, onLogout })
     }
   };
 
-  // Recupera e-mail e dados do usuário logado
-  const userEmail = localStorage.getItem('lumi-user-email') || '';
+  // Recupera dados do usuário logado (utilizando o userEmail já declarado no topo)
   const isSuperAdmin = userEmail.toLowerCase() === 'contato.lumiapp@gmail.com';
   const userFullName = localStorage.getItem('lumi-user-name') || '';
   const rawUsername = localStorage.getItem('lumi-user-username');

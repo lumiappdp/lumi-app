@@ -1,0 +1,5 @@
+# Permitir que motores de busca rastreiem o catálogo e app
+User-agent: *
+Allow: /
+
+Sitemap: https://lumiapp.com.br/sitemap.xml

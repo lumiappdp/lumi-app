@@ -1,8 +1,26 @@
 import { useState } from 'react';
-import logoLight from '../../../identidade-visual/lumi-logo-icone-ve.png';
-import logoDark from '../../../identidade-visual/lumi-logo-icone-ve (2).png';
+import logoLight from '../../../identidade-visual/logo-icone-dark.png';
+import logoDark from '../../../identidade-visual/logo-icone-light.png';
 import { registerUser, checkIsAdmin } from '../../services/authService';
 import './Register.css';
+
+// Valida a complexidade e força da senha de acordo com boas práticas de segurança
+// @param {string} pass - Senha digitada
+// @returns {Object} Status de cada critério e validação geral
+function validateStrongPassword(pass) {
+  const hasMinLength = pass.length >= 8;
+  const hasLetter = /[a-zA-Z]/.test(pass);
+  const hasNumber = /[0-9]/.test(pass);
+  const hasSpecial = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pass);
+
+  return {
+    isValid: hasMinLength && hasLetter && hasNumber && hasSpecial,
+    hasMinLength,
+    hasLetter,
+    hasNumber,
+    hasSpecial
+  };
+}
 
 // Componente da Página de Cadastro do Lumi App
 // Permite que novos usuários se cadastrem e escolham o plano ideal (Anual ou Mensal)
@@ -53,9 +71,10 @@ export function Register({ theme = 'dark', onRegisterSuccess, onBackToLogin }) {
     const cleanUsername = username.trim().toLowerCase().replace(/\s+/g, '');
     const formattedUsername = cleanUsername.startsWith('@') ? cleanUsername : `@${cleanUsername}`;
 
-    // Validação de senha mínima
-    if (password.length < 6) {
-      setErrorMessage('A senha deve conter no mínimo 6 caracteres.');
+    // Validação estrita de senha forte (mínimo 8 caracteres, letras, números e caracteres especiais)
+    const passCheck = validateStrongPassword(password);
+    if (!passCheck.isValid) {
+      setErrorMessage('A senha precisa ter no mínimo 8 caracteres, contendo letras, números e pelo menos um caractere especial (!@#$...).');
       setIsSubmitting(false);
       return;
     }
@@ -238,6 +257,18 @@ export function Register({ theme = 'dark', onRegisterSuccess, onBackToLogin }) {
               required
               autoComplete="new-password"
             />
+            {/* Botão para limpar texto da senha */}
+            {password && (
+              <button
+                type="button"
+                className="clear-input-btn"
+                onClick={() => setPassword('')}
+                aria-label="Limpar senha"
+                style={{ marginRight: '0.2rem' }}
+              >
+                ✕
+              </button>
+            )}
             <button
               type="button"
               className="toggle-password-btn"
@@ -250,6 +281,37 @@ export function Register({ theme = 'dark', onRegisterSuccess, onBackToLogin }) {
               </svg>
             </button>
           </div>
+
+          {/* Checklist interativo de requisitos de senha forte */}
+          {password.length > 0 && (
+            <div style={{
+              fontSize: '0.75rem',
+              color: 'var(--text-secondary, #b3a5b0)',
+              marginTop: '0.35rem',
+              marginBottom: '0.8rem',
+              padding: '0.55rem 0.85rem',
+              borderRadius: '12px',
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.25rem',
+              boxSizing: 'border-box'
+            }}>
+              <span style={{ color: password.length >= 8 ? '#4cd964' : '#EAA1AC', transition: 'color 0.2s' }}>
+                {password.length >= 8 ? '✓' : '○'} Mínimo de 8 caracteres
+              </span>
+              <span style={{ color: /[a-zA-Z]/.test(password) ? '#4cd964' : '#EAA1AC', transition: 'color 0.2s' }}>
+                {/[a-zA-Z]/.test(password) ? '✓' : '○'} Pelo menos uma letra (a-z, A-Z)
+              </span>
+              <span style={{ color: /[0-9]/.test(password) ? '#4cd964' : '#EAA1AC', transition: 'color 0.2s' }}>
+                {/[0-9]/.test(password) ? '✓' : '○'} Pelo menos um número (0-9)
+              </span>
+              <span style={{ color: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password) ? '#4cd964' : '#EAA1AC', transition: 'color 0.2s' }}>
+                {/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password) ? '✓' : '○'} Pelo menos um caractere especial (!@#$...)
+              </span>
+            </div>
+          )}
 
           {/* Seção de Escolha de Planos */}
           <div className="plan-selection-section">

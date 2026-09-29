@@ -43,6 +43,16 @@ export const usageService = {
     const counts = this.getUsageCounts();
     return counts[stickerId] || 0;
   },
+
+  // Limpa o histórico de contagem de uso dos stickers
+  clearAllUsage() {
+    try {
+      localStorage.removeItem(USAGE_KEY);
+      return {};
+    } catch {
+      return {};
+    }
+  },
 };
 
 export default usageService;

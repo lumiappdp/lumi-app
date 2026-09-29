@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import logoLight from '../../../identidade-visual/lumi-logo-icone-ve.png';
-import logoDark from '../../../identidade-visual/lumi-logo-icone-ve (2).png';
+import logoLight from '../../../identidade-visual/logo-icone-dark.png';
+import logoDark from '../../../identidade-visual/logo-icone-light.png';
 import { sendRecoveryOtpEmail } from '../../services/emailService';
 import { resetPasswordWithOtpVerified } from '../../services/authService';
 import './ForgotPassword.css';
@@ -225,11 +225,23 @@ export function ForgotPassword({ theme = 'dark', onBackToLogin }) {
                 </span>
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Nova senha (mínimo 6 dígitos)"
+                  placeholder="Nova senha (mínimo 8 caracteres)"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
                 />
+                {/* Botão de limpar texto da nova senha */}
+                {newPassword && (
+                  <button
+                    type="button"
+                    className="clear-input-btn"
+                    onClick={() => setNewPassword('')}
+                    aria-label="Limpar nova senha"
+                    style={{ marginRight: '0.2rem' }}
+                  >
+                    ✕
+                  </button>
+                )}
                 <button
                   type="button"
                   className="toggle-password-btn"
@@ -258,6 +270,17 @@ export function ForgotPassword({ theme = 'dark', onBackToLogin }) {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                 />
+                {/* Botão de limpar confirmação de senha */}
+                {confirmPassword && (
+                  <button
+                    type="button"
+                    className="clear-input-btn"
+                    onClick={() => setConfirmPassword('')}
+                    aria-label="Limpar confirmação de senha"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
 
               {/* Botão para Salvar Senha */}

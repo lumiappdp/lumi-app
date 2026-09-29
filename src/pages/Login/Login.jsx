@@ -1,7 +1,7 @@
 import { useState } from 'react';
 // Importação das logos originais da identidade visual do Lumi App
-import logoLight from '../../../identidade-visual/lumi-logo-icone-ve.png';
-import logoDark from '../../../identidade-visual/lumi-logo-icone-ve (2).png';
+import logoLight from '../../../identidade-visual/logo-icone-dark.png';
+import logoDark from '../../../identidade-visual/logo-icone-light.png';
 import { loginUser, checkIsAdmin, checkPaymentStatus } from '../../services/authService';
 
 import './Login.css';
@@ -19,6 +19,7 @@ export function Login({ theme = 'dark', onLogin, onNavigateToRegister, onNavigat
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isPaymentPending, setIsPaymentPending] = useState(false);
 
   // Estado que controla se a senha está visível em texto puro ou oculta
   const [showPassword, setShowPassword] = useState(false);
@@ -28,6 +29,7 @@ export function Login({ theme = 'dark', onLogin, onNavigateToRegister, onNavigat
     e.preventDefault();
     setIsLoading(true);
     setErrorMessage('');
+    setIsPaymentPending(false);
 
     const trimmedEmail = email.trim().toLowerCase();
 
@@ -57,7 +59,8 @@ export function Login({ theme = 'dark', onLogin, onNavigateToRegister, onNavigat
       // Validação de Segurança: Bloqueia acesso se a assinatura não estiver ativa/paga
       const isPaid = await checkPaymentStatus(trimmedEmail);
       if (!isPaid) {
-        setErrorMessage('Sua assinatura não está ativa ou expirou. Efetue o pagamento para liberar seu acesso.');
+        setErrorMessage('Sua assinatura não está ativa ou expirou. Efetue o pagamento para renovar seu acesso.');
+        setIsPaymentPending(true);
         setIsLoading(false);
         return;
       }
@@ -94,20 +97,45 @@ export function Login({ theme = 'dark', onLogin, onNavigateToRegister, onNavigat
         {/* Mensagem de acolhimento em itálico */}
         <p className="welcome-text">Olá, como é bom te ver por aqui!</p>
 
-        {/* Mensagem de Erro de Autenticação */}
+        {/* Mensagem de Erro de Autenticação / Assinatura */}
         {errorMessage && (
           <div className="login-error-banner" style={{
             background: 'rgba(234, 161, 172, 0.2)',
             border: '1.5px solid #EAA1AC',
             color: '#FFD2D8',
             borderRadius: '12px',
-            padding: '0.65rem 1rem',
+            padding: '0.8rem 1rem',
             fontSize: '0.85rem',
             marginBottom: '1rem',
             width: '100%',
-            boxSizing: 'border-box'
+            boxSizing: 'border-box',
+            textAlign: 'center'
           }}>
-            {errorMessage}
+            <p style={{ margin: isPaymentPending ? '0 0 0.6rem 0' : 0 }}>{errorMessage}</p>
+            {isPaymentPending && (
+              <a
+                href={`https://pay.kiwify.com.br/vuoMzHN?email=${encodeURIComponent(email.trim())}`}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  background: 'linear-gradient(135deg, #EAA1AC 0%, #D48995 100%)',
+                  color: '#231721',
+                  fontWeight: '700',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '10px',
+                  textDecoration: 'none',
+                  fontSize: '0.82rem',
+                  boxShadow: '0 4px 12px rgba(234, 161, 172, 0.35)',
+                  marginTop: '0.2rem'
+                }}
+              >
+                <span>💳 Renovar / Ativar Assinatura</span>
+              </a>
+            )}
           </div>
         )}
 
@@ -159,6 +187,18 @@ export function Login({ theme = 'dark', onLogin, onNavigateToRegister, onNavigat
               required
               autoComplete="current-password"
             />
+            {/* Botão para limpar texto da senha */}
+            {password && (
+              <button
+                type="button"
+                className="clear-input-btn"
+                onClick={() => setPassword('')}
+                aria-label="Limpar senha"
+                style={{ marginRight: '0.2rem' }}
+              >
+                ✕
+              </button>
+            )}
             {/* Botão de alternar visualização da senha */}
             <button
               type="button"

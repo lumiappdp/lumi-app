@@ -52,6 +52,29 @@ export const recentService = {
       return [];
     }
   },
+
+  // Remove um item individual do histórico de recentes
+  removeRecent(id) {
+    try {
+      const recents = this.getRecents().filter((item) => item.id !== id);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(recents));
+      return recents;
+    } catch (e) {
+      console.error('Erro ao remover sticker recente:', e);
+      return [];
+    }
+  },
+
+  // Limpa completamente todo o histórico de recentes
+  clearAllRecents() {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      return [];
+    } catch (e) {
+      console.error('Erro ao limpar recentes:', e);
+      return [];
+    }
+  },
 };
 
 export default recentService;
