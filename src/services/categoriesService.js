@@ -38,35 +38,41 @@ export async function getSectionsFromSupabase() {
       .select('*')
       .order('display_order', { ascending: true });
 
-    if (!error && Array.isArray(data)) {
+    if (!error && Array.isArray(data) && data.length > 0) {
       // Mapeia categorias do Supabase garantindo a integridade dos subcards para todos os dispositivos
       const mapped = data.map(cat => {
         let parsedCards = [];
+        
+        // 1. Tenta carregar subcards do próprio registro do Supabase
         if (Array.isArray(cat.cards) && cat.cards.length > 0) {
           parsedCards = cat.cards;
         } else if (typeof cat.cards === 'string') {
           try {
-            parsedCards = JSON.parse(cat.cards);
+            const parsed = JSON.parse(cat.cards);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              parsedCards = parsed;
+            }
           } catch {
             parsedCards = [];
           }
         }
 
-        // Se o Supabase não tiver cards em coluna, resgata do cache local onde o admin salvou
-        const localMatch = localSections.find(s => 
-          String(s.id) === String(cat.slug || cat.id) || 
-          s.title?.toLowerCase() === (cat.name || cat.title)?.toLowerCase()
-        );
-
-        if (parsedCards.length === 0 && localMatch && Array.isArray(localMatch.cards) && localMatch.cards.length > 0) {
-          parsedCards = localMatch.cards;
+        // 2. Se não houver subcards no banco, busca no cache local se houver cards válidos
+        if (parsedCards.length === 0) {
+          const localMatch = localSections.find(s => 
+            String(s.id) === String(cat.slug || cat.id) || 
+            s.title?.toLowerCase() === (cat.name || cat.title)?.toLowerCase()
+          );
+          if (localMatch && Array.isArray(localMatch.cards) && localMatch.cards.length > 0) {
+            parsedCards = localMatch.cards;
+          }
         }
 
-        // Se ainda não tiver subcards cadastrados, gera o card padrão com a capa da categoria
+        // 3. Se ainda assim estiver vazio, cria SEMPRE o subcard padrão obrigatório usando a capa da categoria
         if (parsedCards.length === 0) {
           const coverImage = cat.cover_url || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80';
           parsedCards = [{
-            id: `card-${cat.slug || cat.id}`,
+            id: `card-${cat.slug || cat.id || Date.now()}`,
             overlayText: cat.title || cat.name || 'Geral',
             tagLabel: cat.title || cat.name || 'Geral',
             bgImage: coverImage
@@ -75,7 +81,7 @@ export async function getSectionsFromSupabase() {
 
         return {
           id: cat.slug || cat.id,
-          title: cat.name || cat.title,
+          title: cat.name || cat.title || 'Categoria',
           cards: parsedCards
         };
       });
@@ -88,7 +94,7 @@ export async function getSectionsFromSupabase() {
         }
       });
 
-      // Sincroniza com o cache local
+      // Sincroniza com o cache local para carregar instantaneamente nas próximas aberturas
       saveAllSections(mapped);
       return mapped;
     }
