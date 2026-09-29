@@ -39,7 +39,7 @@ export async function getSectionsFromSupabase() {
       .order('display_order', { ascending: true });
 
     if (!error && Array.isArray(data)) {
-      // Mapeia categorias do Supabase garantindo a integridade dos subcards
+      // Mapeia categorias do Supabase garantindo a integridade dos subcards para todos os dispositivos
       const mapped = data.map(cat => {
         let parsedCards = [];
         if (Array.isArray(cat.cards) && cat.cards.length > 0) {
@@ -60,6 +60,17 @@ export async function getSectionsFromSupabase() {
 
         if (parsedCards.length === 0 && localMatch && Array.isArray(localMatch.cards) && localMatch.cards.length > 0) {
           parsedCards = localMatch.cards;
+        }
+
+        // Se ainda não tiver subcards cadastrados, gera o card padrão com a capa da categoria
+        if (parsedCards.length === 0) {
+          const coverImage = cat.cover_url || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80';
+          parsedCards = [{
+            id: `card-${cat.slug || cat.id}`,
+            overlayText: cat.title || cat.name || 'Geral',
+            tagLabel: cat.title || cat.name || 'Geral',
+            bgImage: coverImage
+          }];
         }
 
         return {
