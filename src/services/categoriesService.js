@@ -58,21 +58,25 @@ export async function getSectionsFromSupabase() {
         }
 
         // 2. Se não houver subcards no banco, busca no cache local se houver cards válidos
+        const unifiedId = cat.slug || cat.id;
+        const normalizedTitle = (cat.name || cat.title || '').trim().toLowerCase();
+
         if (parsedCards.length === 0) {
           const localMatch = localSections.find(s => 
-            String(s.id) === String(cat.slug || cat.id) || 
-            s.title?.toLowerCase() === (cat.name || cat.title)?.toLowerCase()
+            String(s.id).toLowerCase() === String(unifiedId).toLowerCase() || 
+            (s.slug && String(s.slug).toLowerCase() === String(unifiedId).toLowerCase()) ||
+            (s.title || '').trim().toLowerCase() === normalizedTitle
           );
           if (localMatch && Array.isArray(localMatch.cards) && localMatch.cards.length > 0) {
             parsedCards = localMatch.cards;
           }
         }
 
-        // 3. Se ainda assim estiver vazio, cria SEMPRE o subcard padrão obrigatório usando a capa da categoria
+        // 3. Se ainda assim estiver vazio, cria o subcard padrão obrigatório usando a capa da categoria
         if (parsedCards.length === 0) {
           const coverImage = cat.cover_url || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80';
           parsedCards = [{
-            id: `card-${cat.slug || cat.id || Date.now()}`,
+            id: `card-${unifiedId}`,
             overlayText: cat.title || cat.name || 'Geral',
             tagLabel: cat.title || cat.name || 'Geral',
             bgImage: coverImage
@@ -80,23 +84,32 @@ export async function getSectionsFromSupabase() {
         }
 
         return {
-          id: cat.slug || cat.id,
+          id: unifiedId,
+          slug: unifiedId,
           title: cat.name || cat.title || 'Categoria',
           cards: parsedCards
         };
       });
 
-      // Inclui também seções criadas localmente que ainda não desceram do Supabase
-      localSections.forEach(localSec => {
-        const alreadyInMapped = mapped.some(m => String(m.id) === String(localSec.id) || m.title?.toLowerCase() === localSec.title?.toLowerCase());
-        if (!alreadyInMapped) {
-          mapped.push(localSec);
+      // Deduplicação estrita: remove qualquer repetição de ID ou Título
+      const uniqueSections = [];
+      const seenKeys = new Set();
+
+      mapped.forEach(item => {
+        const idKey = String(item.id || item.slug).trim().toLowerCase();
+        const titleKey = String(item.title || '').trim().toLowerCase();
+        const combinedKey = `${idKey}::${titleKey}`;
+
+        if (!seenKeys.has(combinedKey) && !seenKeys.has(titleKey)) {
+          seenKeys.add(combinedKey);
+          seenKeys.add(titleKey);
+          uniqueSections.push(item);
         }
       });
 
       // Sincroniza com o cache local para carregar instantaneamente nas próximas aberturas
-      saveAllSections(mapped);
-      return mapped;
+      saveAllSections(uniqueSections);
+      return uniqueSections;
     }
   } catch (err) {
     console.log('Utilizando cache local de seções:', err);
@@ -107,7 +120,17 @@ export async function getSectionsFromSupabase() {
 // Salva a lista completa de seções
 export function saveAllSections(sections) {
   try {
-    localStorage.setItem(LOCAL_SECTIONS_KEY, JSON.stringify(sections));
+    // Garante que não sejam salvas seções duplicadas no cache local
+    const unique = [];
+    const seen = new Set();
+    (Array.isArray(sections) ? sections : []).forEach(sec => {
+      const key = (sec.title || '').trim().toLowerCase();
+      if (key && !seen.has(key)) {
+        seen.add(key);
+        unique.push(sec);
+      }
+    });
+    localStorage.setItem(LOCAL_SECTIONS_KEY, JSON.stringify(unique));
   } catch (err) {
     console.error('Erro ao salvar seções:', err);
   }
@@ -127,13 +150,17 @@ export async function createNicheSection(title) {
     .replace(/[^a-z0-9]/g, '-');
 
   const currentSections = getAllSections();
-  const alreadyExists = currentSections.some(s => s.id === slug || s.title.toLowerCase() === cleanTitle.toLowerCase());
+  const alreadyExists = currentSections.some(s => 
+    String(s.id).toLowerCase() === slug.toLowerCase() || 
+    (s.title && s.title.trim().toLowerCase() === cleanTitle.toLowerCase())
+  );
   if (alreadyExists) {
     throw new Error('Já existe um nicho com este nome.');
   }
 
   const newSection = {
     id: slug,
+    slug: slug,
     title: cleanTitle,
     cards: [],
   };
