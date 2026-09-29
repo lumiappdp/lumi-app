@@ -24,7 +24,9 @@ export async function getStickers({ categorySlug, isTrending, isPopular, searchQ
   let query = supabase.from('stickers').select('*');
 
   if (categorySlug) {
-    query = query.eq('category_slug', categorySlug);
+    const cleanSlug = categorySlug.trim().toLowerCase();
+    // Busca exata pelo slug ou se a tag contiver o termo da categoria
+    query = query.or(`category_slug.eq.${cleanSlug},category_slug.ilike.%${cleanSlug}%`);
   }
 
   if (isTrending) {
@@ -41,7 +43,10 @@ export async function getStickers({ categorySlug, isTrending, isPopular, searchQ
 
   const { data, error } = await query.order('created_at', { ascending: false });
 
-  if (error) throw error;
+  if (error) {
+    console.warn('Erro ao consultar stickers no Supabase:', error);
+    return [];
+  }
   return data || [];
 }
 

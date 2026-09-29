@@ -318,7 +318,7 @@ export async function addSubcardToSection(sectionId, { overlayText, tagLabel, fi
   // Salva no armazenamento local primeiro (garantia de funcionamento imediato na interface)
   saveAllSections(updatedSections);
 
-  // Sincroniza a capa da categoria no Supabase
+  // Sincroniza a capa da categoria e a lista de subcards no Supabase
   try {
     const targetSec = updatedSections.find(s => 
       String(s.id) === String(sectionId) || (s.slug && String(s.slug) === String(sectionId))
@@ -330,6 +330,7 @@ export async function addSubcardToSection(sectionId, { overlayText, tagLabel, fi
       const payload = {
         title: targetSec.title,
         cover_url: targetSec.cards[0]?.bgImage || null,
+        cards: targetSec.cards || []
       };
 
       // Tenta atualizar registro existente
@@ -346,7 +347,8 @@ export async function addSubcardToSection(sectionId, { overlayText, tagLabel, fi
         await supabase.from('categories').upsert({
           slug: targetSec.id,
           title: targetSec.title,
-          cover_url: targetSec.cards[0]?.bgImage || null
+          cover_url: targetSec.cards[0]?.bgImage || null,
+          cards: targetSec.cards || []
         }, { onConflict: 'slug' });
       }
     }
