@@ -69,6 +69,69 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
   // Stickers dinâmicos carregados diretamente do banco Supabase
   const [databaseStickers, setDatabaseStickers] = useState([]);
 
+  // Estados para o gesto de Pull-to-Refresh (Puxar para baixo para atualizar no celular)
+  const [pullStartY, setPullStartY] = useState(0);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Função para recarregar todos os dados do banco e novidades em tempo real
+  const handleRefreshData = async () => {
+    setIsRefreshing(true);
+    try {
+      // Recarrega seções, capas e figurinhas do Supabase simultaneamente
+      const [sectionsData, coversData, stickersData] = await Promise.all([
+        getSectionsFromSupabase(),
+        getCustomCoversFromSupabase(),
+        getStickers()
+      ]);
+
+      if (sectionsData) setSections(sectionsData);
+      if (coversData) setCustomCovers(coversData);
+      if (stickersData) setDatabaseStickers(stickersData);
+
+      // Se estiver na aba Eu Criei, recarrega também as criações da nuvem
+      if (activeTab === 'eu-criei') {
+        const cloudCreations = await creationsService.fetchUserGalleryFromCloud(currentUserEmail);
+        setMyCreations(cloudCreations);
+      }
+
+      setToastMessage('Catálogo atualizado com sucesso!');
+    } catch (err) {
+      console.warn('Erro ao atualizar dados:', err);
+    } finally {
+      setIsRefreshing(false);
+      setPullDistance(0);
+      setTimeout(() => setToastMessage(''), 2000);
+    }
+  };
+
+  // Manipuladores de toque para o gesto de puxar para baixo no mobile
+  const handleTouchStart = (e) => {
+    if (window.scrollY === 0) {
+      setPullStartY(e.touches[0].clientY);
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (pullStartY > 0 && window.scrollY === 0) {
+      const currentY = e.touches[0].clientY;
+      const diff = currentY - pullStartY;
+      if (diff > 0) {
+        // Aplica resistência elástica suave
+        setPullDistance(Math.min(diff * 0.4, 75));
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (pullDistance > 50 && !isRefreshing) {
+      handleRefreshData();
+    } else {
+      setPullDistance(0);
+    }
+    setPullStartY(0);
+  };
+
   // Referência e estados para o arraste (drag / swipe) suave dos filtros horizontais
   const filtersScrollRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -461,7 +524,33 @@ export function Home({ theme = 'dark', onNavigate, onSelectCategory, onSelectSec
     .filter((sec) => sec.cards && sec.cards.length > 0);
 
   return (
-    <div className={`home-container ${theme}`} data-theme={theme}>
+    <div 
+      className={`home-container ${theme}`} 
+      data-theme={theme}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Indicador visual de Pull-to-Refresh (Estilo iOS) */}
+      {(pullDistance > 0 || isRefreshing) && (
+        <div 
+          className="pull-to-refresh-indicator"
+          style={{
+            height: isRefreshing ? '46px' : `${pullDistance}px`,
+            opacity: Math.min(pullDistance / 40, 1)
+          }}
+        >
+          <div className={`pull-refresh-spinner ${isRefreshing ? 'spinning' : ''}`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EAA1AC" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+            </svg>
+          </div>
+          <span style={{ fontSize: '0.78rem', color: '#EAA1AC', fontWeight: '600' }}>
+            {isRefreshing ? 'Atualizando novidades...' : pullDistance > 50 ? 'Solte para atualizar' : 'Puxe para atualizar'}
+          </span>
+        </div>
+      )}
+
       {/* Toast de Notificação na Home */}
       {toastMessage && (
         <div className="home-toast-banner">

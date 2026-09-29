@@ -29,6 +29,28 @@
 }
 
 /* ==================================================
+   PULL TO REFRESH (PUXAR PARA BAIXO PARA ATUALIZAR)
+   ================================================== */
+.pull-to-refresh-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  overflow: hidden;
+  transition: height 0.2s ease, opacity 0.2s ease;
+  width: 100%;
+}
+
+.pull-refresh-spinner.spinning svg {
+  animation: spinPull 0.8s linear infinite;
+}
+
+@keyframes spinPull {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ==================================================
    HEADER COM LOGOTIPO OFICIAL
    ================================================== */
 .home-header {
