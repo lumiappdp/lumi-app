@@ -30,6 +30,7 @@ export function getAllSections() {
 }
 
 // Obtém as seções e subcards sincronizados diretamente do Supabase
+// Garante que o celular iOS e o computador enxerguem exatamente a mesma estrutura
 export async function getSectionsFromSupabase() {
   const localSections = getAllSections();
   try {
@@ -43,10 +44,10 @@ export async function getSectionsFromSupabase() {
       const mapped = data.map(cat => {
         let parsedCards = [];
         
-        // 1. Tenta carregar subcards do próprio registro do Supabase
+        // 1. Tenta carregar subcards gravados no banco de dados
         if (Array.isArray(cat.cards) && cat.cards.length > 0) {
           parsedCards = cat.cards;
-        } else if (typeof cat.cards === 'string') {
+        } else if (typeof cat.cards === 'string' && cat.cards.trim().startsWith('[')) {
           try {
             const parsed = JSON.parse(cat.cards);
             if (Array.isArray(parsed) && parsed.length > 0) {
@@ -57,41 +58,40 @@ export async function getSectionsFromSupabase() {
           }
         }
 
-        // 2. Se não houver subcards no banco, busca no cache local se houver cards válidos
         const unifiedId = cat.slug || cat.id;
-        const normalizedTitle = (cat.name || cat.title || '').trim().toLowerCase();
 
-        if (parsedCards.length === 0) {
-          const localMatch = localSections.find(s => 
-            String(s.id).toLowerCase() === String(unifiedId).toLowerCase() || 
-            (s.slug && String(s.slug).toLowerCase() === String(unifiedId).toLowerCase()) ||
-            (s.title || '').trim().toLowerCase() === normalizedTitle
-          );
-          if (localMatch && Array.isArray(localMatch.cards) && localMatch.cards.length > 0) {
-            parsedCards = localMatch.cards;
-          }
-        }
-
-        // 3. Se ainda assim estiver vazio, cria o subcard padrão obrigatório usando a capa da categoria
+        // 2. Apenas se não houver NENHUM subcard criado no banco ou local, utiliza a capa do nicho como card inicial
         if (parsedCards.length === 0) {
           const coverImage = cat.cover_url || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80';
           parsedCards = [{
             id: `card-${unifiedId}`,
             overlayText: cat.title || cat.name || 'Geral',
             tagLabel: cat.title || cat.name || 'Geral',
-            bgImage: coverImage
+            bgImage: coverImage,
+            isDefaultFallback: true // Marcador para substituição ao adicionar subcards reais
           }];
         }
 
+        // Deduplica subcards internos caso algum tenha sido salvo duas vezes
+        const uniqueCards = [];
+        const seenCardKeys = new Set();
+        parsedCards.forEach(c => {
+          const cardKey = (c.tagLabel || c.overlayText || c.id || '').trim().toLowerCase();
+          if (cardKey && !seenCardKeys.has(cardKey)) {
+            seenCardKeys.add(cardKey);
+            uniqueCards.push(c);
+          }
+        });
+
         return {
           id: unifiedId,
-          slug: unifiedId,
+          slug: cat.slug || unifiedId,
           title: cat.name || cat.title || 'Categoria',
-          cards: parsedCards
+          cards: uniqueCards
         };
       });
 
-      // Deduplicação estrita: remove qualquer repetição de ID ou Título
+      // Deduplicação de categorias: remove qualquer repetição de ID ou Título
       const uniqueSections = [];
       const seenKeys = new Set();
 
@@ -107,7 +107,7 @@ export async function getSectionsFromSupabase() {
         }
       });
 
-      // Sincroniza com o cache local para carregar instantaneamente nas próximas aberturas
+      // Sincroniza com o cache local do dispositivo para carregamento instantâneo
       saveAllSections(uniqueSections);
       return uniqueSections;
     }
@@ -117,7 +117,7 @@ export async function getSectionsFromSupabase() {
   return localSections;
 }
 
-// Salva a lista completa de seções
+// Salva a lista completa de seções no armazenamento local
 export function saveAllSections(sections) {
   try {
     // Garante que não sejam salvas seções duplicadas no cache local
@@ -174,6 +174,7 @@ export async function createNicheSection(title) {
       slug: slug,
       title: cleanTitle,
       display_order: updatedSections.length,
+      cards: []
     }, { onConflict: 'slug' });
 
     if (upsertError) {
@@ -250,7 +251,7 @@ export async function updateNicheSection(sectionId, { title, coverFileOrUrl }) {
 
   // Atualiza no cache local
   const updatedSections = currentSections.map(sec => {
-    if (sec.id === sectionId) {
+    if (sec.id === sectionId || sec.slug === sectionId) {
       const updatedCards = [...(sec.cards || [])];
       if (newCoverUrl) {
         if (updatedCards.length > 0) {
@@ -296,11 +297,11 @@ export async function updateNicheSection(sectionId, { title, coverFileOrUrl }) {
   return updatedSections;
 }
 
-// Adiciona um novo subcard dentro de um nicho específico
-// @param {string} sectionId - ID do nicho pai
+// Adiciona um novo subcard dentro de um nicho específico e sincroniza no Supabase
+// @param {string} sectionId - ID ou Slug do nicho pai
 // @param {Object} cardData - { overlayText, tagLabel, fileOrUrl }
 export async function addSubcardToSection(sectionId, { overlayText, tagLabel, fileOrUrl }) {
-  if (!overlayText || !overlayText.trim()) throw new Error('Texto do card é obrigatório.');
+  if (!tagLabel && !overlayText) throw new Error('Texto ou Etiqueta do card é obrigatório.');
 
   let finalBg = 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&auto=format&fit=crop&q=80';
 
@@ -327,66 +328,67 @@ export async function addSubcardToSection(sectionId, { overlayText, tagLabel, fi
     }
   }
 
-  // Novo subcard com frase no centro e etiqueta específica no rodapé
+  // Novo subcard limpo
   const newCard = {
     id: `card-${Date.now()}`,
-    overlayText: overlayText.trim(),
-    tagLabel: (tagLabel || '').trim(),
+    overlayText: (overlayText || tagLabel).trim(),
+    tagLabel: (tagLabel || overlayText).trim(),
     bgImage: finalBg,
   };
 
   const currentSections = getAllSections();
+  let targetSection = null;
+
   const updatedSections = currentSections.map(sec => {
     const isTarget = String(sec.id) === String(sectionId) || 
                      (sec.slug && String(sec.slug) === String(sectionId));
     if (isTarget) {
-      return {
+      // Remove qualquer subcard padrão fallback automático antes de adicionar o card real
+      const existingCards = (sec.cards || []).filter(c => !c.isDefaultFallback && c.id !== `card-${sec.id}`);
+      
+      const newCardList = [...existingCards, newCard];
+      targetSection = {
         ...sec,
-        cards: [...(sec.cards || []), newCard],
+        cards: newCardList,
       };
+      return targetSection;
     }
     return sec;
   });
 
-  // Salva no armazenamento local primeiro (garantia de funcionamento imediato na interface)
+  // Salva no armazenamento local do dispositivo
   saveAllSections(updatedSections);
 
-  // Sincroniza a capa da categoria e a lista de subcards no Supabase
-  try {
-    const targetSec = updatedSections.find(s => 
-      String(s.id) === String(sectionId) || (s.slug && String(s.slug) === String(sectionId))
-    );
-
-    if (targetSec) {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetSec.id);
-      
+  // Sincroniza diretamente na tabela 'categories' do Supabase para refletir no iOS
+  if (targetSection) {
+    try {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetSection.id);
       const payload = {
-        title: targetSec.title,
-        cover_url: targetSec.cards[0]?.bgImage || null,
-        cards: targetSec.cards || []
+        title: targetSection.title,
+        cover_url: targetSection.cards[0]?.bgImage || null,
+        cards: targetSection.cards || []
       };
 
-      // Tenta atualizar registro existente
       let updateQuery = supabase.from('categories').update(payload);
       if (isUuid) {
-        updateQuery = updateQuery.eq('id', targetSec.id);
+        updateQuery = updateQuery.eq('id', targetSection.id);
       } else {
-        updateQuery = updateQuery.eq('slug', targetSec.id);
+        updateQuery = updateQuery.eq('slug', targetSection.slug || targetSection.id);
       }
       
       const { error: updateErr } = await updateQuery;
 
       if (updateErr) {
         await supabase.from('categories').upsert({
-          slug: targetSec.id,
-          title: targetSec.title,
-          cover_url: targetSec.cards[0]?.bgImage || null,
-          cards: targetSec.cards || []
+          slug: targetSection.slug || targetSection.id,
+          title: targetSection.title,
+          cover_url: targetSection.cards[0]?.bgImage || null,
+          cards: targetSection.cards || []
         }, { onConflict: 'slug' });
       }
+    } catch (err) {
+      console.warn('Erro ao sincronizar subcard no Supabase:', err);
     }
-  } catch (err) {
-    console.warn('Sincronização de categoria com Supabase:', err);
   }
 
   return newCard;
@@ -395,37 +397,43 @@ export async function addSubcardToSection(sectionId, { overlayText, tagLabel, fi
 // Exclui um subcard de uma seção no banco e localmente
 export async function deleteSubcardFromSection(sectionId, cardId) {
   const currentSections = getAllSections();
+  let targetSection = null;
+
   const updatedSections = currentSections.map(sec => {
     const isTarget = String(sec.id) === String(sectionId) || 
                      (sec.slug && String(sec.slug) === String(sectionId));
     if (isTarget) {
-      return {
+      const filteredCards = (sec.cards || []).filter(c => String(c.id) !== String(cardId));
+      targetSection = {
         ...sec,
-        cards: (sec.cards || []).filter(c => String(c.id) !== String(cardId)),
+        cards: filteredCards,
       };
+      return targetSection;
     }
     return sec;
   });
 
   saveAllSections(updatedSections);
 
-  try {
-    const targetSec = updatedSections.find(s => 
-      String(s.id) === String(sectionId) || (s.slug && String(s.slug) === String(sectionId))
-    );
-    if (targetSec) {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetSec.id);
+  if (targetSection) {
+    try {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetSection.id);
       const payload = {
-        cover_url: targetSec.cards[0]?.bgImage || null
+        cover_url: targetSection.cards[0]?.bgImage || null,
+        cards: targetSection.cards || []
       };
+
+      let updateQuery = supabase.from('categories').update(payload);
       if (isUuid) {
-        await supabase.from('categories').update(payload).eq('id', targetSec.id);
+        updateQuery = updateQuery.eq('id', targetSection.id);
       } else {
-        await supabase.from('categories').update(payload).eq('slug', targetSec.id);
+        updateQuery = updateQuery.eq('slug', targetSection.slug || targetSection.id);
       }
+
+      await updateQuery;
+    } catch (err) {
+      console.warn('Erro ao atualizar subcards no Supabase após remoção:', err);
     }
-  } catch (err) {
-    console.warn('Erro ao atualizar subcards no Supabase após remoção:', err);
   }
 
   return updatedSections;
