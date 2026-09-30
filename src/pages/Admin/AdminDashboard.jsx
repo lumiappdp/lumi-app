@@ -288,17 +288,22 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
   };
 
   // Lista dinâmica de categorias alimentada diretamente pelos nichos reais cadastrados
+  // Garante que o slug corresponda a uma categoria pai existente no Supabase e embute a subcategoria como tag
   const dynamicCategories = [
-    { slug: 'elementos', title: 'Elementos & Desenhos (Aba Elementos)' },
-    ...allSections.map(sec => ({ slug: sec.id, title: sec.title })),
-    ...allSections.flatMap(sec => (sec.cards || []).map(c => ({
-      slug: (c.tagLabel || c.overlayText || '')
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]/g, '-'),
-      title: `${sec.title} → ${c.tagLabel || c.overlayText}`
-    })))
+    { slug: 'elementos', title: 'Elementos & Desenhos (Aba Elementos)', subtag: 'elementos' },
+    ...allSections.map(sec => ({ 
+      slug: sec.slug || sec.id, 
+      title: sec.title, 
+      subtag: (sec.title || '').toLowerCase() 
+    })),
+    ...allSections.flatMap(sec => (sec.cards || []).map(c => {
+      const cardTitle = c.tagLabel || c.overlayText || '';
+      return {
+        slug: sec.slug || sec.id,
+        title: `${sec.title} → ${cardTitle}`,
+        subtag: cardTitle.toLowerCase().trim()
+      };
+    }))
   ];
 
   const [recentStickers, setRecentStickers] = useState([]);
@@ -372,10 +377,17 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
     setIsUploading(true);
     setUploadFeedback(null);
 
-    const tags = tagsInput
+    const selectedOption = dynamicCategories.find((cat, idx) => `${cat.slug}_${idx}` === selectedCategorySlug || cat.slug === selectedCategorySlug);
+    const targetSlug = selectedOption ? selectedOption.slug : (selectedCategorySlug || 'elementos');
+    const autoSubtag = selectedOption?.subtag ? selectedOption.subtag : '';
+
+    const userTags = tagsInput
       .split(',')
       .map(tag => tag.trim().toLowerCase())
       .filter(Boolean);
+
+    // Mescla tags do usuário com a tag automática da subcategoria sem duplicar
+    const finalTags = Array.from(new Set([...userTags, ...(autoSubtag ? [autoSubtag] : [])]));
 
     try {
       // Faz upload de cada arquivo selecionado
@@ -384,8 +396,8 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
         await uploadSticker({
           file,
           title,
-          categorySlug: selectedCategorySlug,
-          tags,
+          categorySlug: targetSlug,
+          tags: finalTags,
           type: stickerType,
         });
       }
@@ -547,10 +559,9 @@ export function AdminDashboard({ theme = 'dark', onBack }) {
                 onChange={(e) => setSelectedCategorySlug(e.target.value)}
                 className="admin-input-pill"
               >
-                {dynamicCategories.map(cat => (
-                  <option key={cat.slug} value={cat.slug}>{cat.title}</option>
+                {dynamicCategories.map((cat, idx) => (
+                  <option key={`${cat.slug}_${idx}`} value={`${cat.slug}_${idx}`}>{cat.title}</option>
                 ))}
-
               </select>
             </div>
 

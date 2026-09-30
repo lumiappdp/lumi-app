@@ -25,8 +25,8 @@ export async function getStickers({ categorySlug, isTrending, isPopular, searchQ
 
   if (categorySlug) {
     const cleanSlug = categorySlug.trim().toLowerCase();
-    // Busca exata pelo slug ou se a tag contiver o termo da categoria
-    query = query.or(`category_slug.eq.${cleanSlug},category_slug.ilike.%${cleanSlug}%`);
+    // Busca exata pelo slug, pelo título aproximado ou nas tags associadas
+    query = query.or(`category_slug.eq.${cleanSlug},category_slug.ilike.%${cleanSlug}%,tags.cs.{${cleanSlug}}`);
   }
 
   if (isTrending) {
@@ -99,7 +99,7 @@ export async function uploadSticker({ file, title, categorySlug, tags = [], type
   }
 
   // 3. Garante que a categoria selecionada exista na tabela 'categories' (evita erro de foreign key)
-  const safeCategorySlug = categorySlug || 'geral';
+  const safeCategorySlug = categorySlug || 'elementos';
   try {
     const { data: catExists } = await supabase
       .from('categories')
@@ -108,20 +108,23 @@ export async function uploadSticker({ file, title, categorySlug, tags = [], type
       .maybeSingle();
 
     if (!catExists) {
-      // Cria a categoria automaticamente no banco se for um nicho novo
-      const categoryTitle = safeCategorySlug
-        .split('-')
-        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(' ');
+      // Se não existir, tenta encontrar qualquer categoria ativa ou cria apenas se não houver nenhuma
+      const { data: anyCat } = await supabase
+        .from('categories')
+        .select('slug')
+        .limit(1)
+        .maybeSingle();
 
-      await supabase.from('categories').insert({
-        slug: safeCategorySlug,
-        title: categoryTitle,
-      });
+      if (anyCat) {
+        // Usa a categoria já existente para evitar criar categorias fantasmas no app
+        categorySlug = anyCat.slug;
+      }
     }
   } catch (catErr) {
     console.warn('Verificação de categoria:', catErr);
   }
+
+  const finalCategorySlug = categorySlug || safeCategorySlug;
 
   // 4. Salva o registro na tabela 'stickers'
   const { data, error: dbError } = await supabase
@@ -130,7 +133,7 @@ export async function uploadSticker({ file, title, categorySlug, tags = [], type
       {
         title,
         image_url: publicUrl,
-        category_slug: safeCategorySlug,
+        category_slug: finalCategorySlug,
         tags,
         type,
       },
